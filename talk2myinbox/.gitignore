@@ -1,0 +1,292 @@
+# ============================================================================
+# SECURITY - NEVER COMMIT THESE FILES
+# ============================================================================
+
+# Environment Variables (API Keys, Secrets)
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging.local
+
+# Credentials and Tokens
+config/*.json
+!config/.gitkeep
+config/*.token
+config/credentials/
+config/*credentials*
+*.credentials.json
+*token.json
+*-token.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+secrets/
+secret.*
+
+# OAuth & API Keys
+oauth_credentials.json
+client_secret*.json
+service_account*.json
+gmail_credentials.json
+gmail_token.json
+calendar_credentials.json
+calendar_token.json
+
+# AWS Credentials
+.aws/
+aws-credentials
+credentials.csv
+
+# SSH Keys
+id_rsa
+id_rsa.pub
+id_dsa
+id_dsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
+*.ppk
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+virtualenv/
+
+# ============================================================================
+# IDE & EDITORS
+# ============================================================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.code-workspace
+
+# ============================================================================
+# LOGS & MONITORING
+# ============================================================================
+
+*.log
+logs/
+*.out
+*.err
+log/
+*.log.*
+
+# ============================================================================
+# TEST COVERAGE & REPORTS
+# ============================================================================
+
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+coverage/
+.tox/
+.nox/
+.hypothesis/
+junit/
+test-results/
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.coveragerc
+
+# ============================================================================
+# TEMPORARY FILES
+# ============================================================================
+
+*.tmp
+*.temp
+temp/
+tmp/
+*.bak
+*.backup
+*~.nib
+
+# ============================================================================
+# OS SPECIFIC
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# MEDIA FILES (for testing)
+# ============================================================================
+
+*.mp3
+*.wav
+*.ogg
+*.m4a
+*.flac
+*.webm
+*.mp4
+*.avi
+uploads/
+recordings/
+
+# ============================================================================
+# DATABASE
+# ============================================================================
+
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+database/
+db/
+data/*.db
+
+# ============================================================================
+# JUPYTER NOTEBOOKS
+# ============================================================================
+
+.ipynb_checkpoints/
+*.ipynb
+Untitled*.ipynb
+
+# ============================================================================
+# TYPE CHECKING & LINTING
+# ============================================================================
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ============================================================================
+# DOCKER & CONTAINERS
+# ============================================================================
+
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# NODE (if frontend uses Node)
+# ============================================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+package-lock.json
+yarn.lock
+
+# ============================================================================
+# BACKUPS & ARCHIVES
+# ============================================================================
+
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+backup/
+backups/
+
+# ============================================================================
+# PRODUCTION FILES
+# ============================================================================
+
+# Never commit production configs
+prod.env
+production.env
+.env.prod
+.env.production
+
+# Never commit sensitive data
+sensitive/
+private/
+confidential/

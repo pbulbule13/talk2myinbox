@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(chmod:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then echo \".env exists locally\")",
+      "Bash(else echo \".env not found - will need to be created from .env.example\")",
+      "Bash(fi)",
+      "Bash(test:*)",
+      "Bash(python server.py:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(if exist nul del nul)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

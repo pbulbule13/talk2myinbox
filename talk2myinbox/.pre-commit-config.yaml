@@ -1,0 +1,172 @@
+# Pre-commit Hooks Configuration
+# Prevents committing sensitive information and maintains code quality
+
+repos:
+  # ============================================================================
+  # SECURITY - Detect Secrets
+  # ============================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # ============================================================================
+  # GENERAL FILE CHECKS
+  # ============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Security checks
+      - id: detect-private-key
+        name: Detect Private Keys
+
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=1000']
+
+      # File integrity checks
+      - id: check-merge-conflict
+        name: Check for Merge Conflicts
+
+      - id: check-json
+        name: Check JSON Syntax
+
+      - id: check-yaml
+        name: Check YAML Syntax
+        args: ['--unsafe']
+
+      - id: check-toml
+        name: Check TOML Syntax
+
+      # Whitespace and formatting
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      - id: end-of-file-fixer
+        name: Fix End of Files
+
+      - id: mixed-line-ending
+        name: Check Mixed Line Endings
+        args: ['--fix=lf']
+
+      # Python specific
+      - id: check-ast
+        name: Check Python AST
+
+      - id: check-builtin-literals
+        name: Check Python Built-in Literals
+
+      - id: check-docstring-first
+        name: Check Docstring First
+
+      - id: debug-statements
+        name: Check for Debug Statements
+
+      - id: name-tests-test
+        name: Check Test Naming
+        args: ['--pytest-test-first']
+
+  # ============================================================================
+  # PYTHON CODE FORMATTING
+  # ============================================================================
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: Format Python Code (Black)
+        language_version: python3.10
+
+  # ============================================================================
+  # PYTHON IMPORT SORTING
+  # ============================================================================
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Sort Python Imports (isort)
+        args: ["--profile", "black"]
+
+  # ============================================================================
+  # PYTHON LINTING
+  # ============================================================================
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: Lint Python Code (Flake8)
+        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        additional_dependencies: [flake8-docstrings]
+
+  # ============================================================================
+  # SECURITY SCANNING
+  # ============================================================================
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        name: Security Check (Bandit)
+        args: ['-ll', '-i', '--recursive', 'backend']
+        files: \.py$
+
+  # ============================================================================
+  # DOCUMENTATION
+  # ============================================================================
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        name: Check Docstring Style
+        args: ['--convention=google']
+        exclude: '^(tests/|docs/)'
+
+  # ============================================================================
+  # MARKDOWN LINTING
+  # ============================================================================
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown Files
+
+  # ============================================================================
+  # COMMIT MESSAGE VALIDATION
+  # ============================================================================
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        name: Check Commit Message Format
+        stages: [commit-msg]
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# Files to exclude from all hooks
+exclude: |
+  (?x)^(
+    \.git/|
+    \.venv/|
+    venv/|
+    node_modules/|
+    __pycache__/|
+    \.pytest_cache/|
+    \.mypy_cache/|
+    backend/tests/coverage/|
+    .*\.egg-info/|
+    dist/|
+    build/
+  )
+
+# Default language version
+default_language_version:
+  python: python3.10
+
+# Fail fast - stop on first error
+fail_fast: false
+
+# Minimum pre-commit version
+minimum_pre_commit_version: 2.15.0
