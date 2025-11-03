@@ -704,11 +704,20 @@ async def get_calendar_events(timeframe: str = "day"):
         # Format events for frontend
         events = []
         for event in events_data:
+            # Handle both formats: direct ISO strings or nested dict (Google API format)
+            start_value = event.get("start", "")
+            if isinstance(start_value, dict):
+                start_value = start_value.get("dateTime", start_value.get("date", ""))
+
+            end_value = event.get("end", "")
+            if isinstance(end_value, dict):
+                end_value = end_value.get("dateTime", end_value.get("date", ""))
+
             events.append({
-                "id": event.get("id", ""),
-                "title": event.get("summary", "Untitled Event"),
-                "start": event.get("start", {}).get("dateTime", event.get("start", {}).get("date", "")),
-                "end": event.get("end", {}).get("dateTime", event.get("end", {}).get("date", "")),
+                "id": event.get("id", event.get("event_id", "")),
+                "title": event.get("summary", event.get("title", "Untitled Event")),
+                "start": start_value,
+                "end": end_value,
                 "location": event.get("location", ""),
                 "description": event.get("description", "")
             })
