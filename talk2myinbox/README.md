@@ -1,318 +1,340 @@
-# Communications App
+# Talk2MyInbox - AI Email & Calendar Assistant
 
-A standalone email and calendar management application with AI-powered voice agent integration.
+An intelligent email and calendar management system with voice capabilities, powered by AI.
 
-## Features
+## 🚀 Features
 
-- 📧 **Email Management**: Connect to Gmail and manage your inbox
-- 📅 **Calendar Integration**: View and manage Google Calendar events
-- 🤖 **AI Assistant**: Smart email categorization and draft generation
-- 🎙️ **Voice Interface**: Three interaction modes - Text, Semi-Voice, and Full-Voice
-  - ⌨️ **Text Mode**: Type queries, read responses
-  - 🔊 **Semi-Voice Mode**: Type queries, hear AI responses
-  - 🎤 **Full-Voice Mode**: Speak queries, hear responses (hands-free!)
-- 📝 **Draft Approval**: Review and approve AI-generated email responses
-- 👤 **Human Escalation**: Escalate complex items for human review
-- 🔐 **Secure OAuth**: Secure Gmail and Calendar authentication
+### Email Management
+- ✅ **30 Emails Display** with pagination (10 per page)
+- ✅ **Smart Detection** - Human vs Automated email classification
+- ✅ **Thread Grouping** - Conversations with >2 messages automatically grouped
+- ✅ **Job Application Tracking** - Automatically detects and prioritizes job-related emails
+- ✅ **Follow-up Indicators** - Visual badges for threads needing attention
+- ✅ **Thread Viewer** - View full conversation history in a modal
 
-## Project Structure
+### Calendar Integration
+- ✅ **Auto-Detect Calendar Invites** - Automatically finds meeting invitations in emails
+- ✅ **Automatic Calendar Blocking** - Creates calendar events from detected invites
+- ✅ **Manual Time Blocking** - API to block specific time slots (e.g., kids' school)
+- ✅ **Week/Day View** - View events for today or the entire week
 
-```
-communications-app/
-├── frontend/               # Frontend files
-│   ├── index.html         # Main HTML page
-│   ├── communications_enhanced.js  # Core JavaScript
-│   └── communications_tab_enhanced.html  # Original tab component
-├── backend/               # Backend API
-│   ├── server.py         # FastAPI server
-│   └── voice_agent/      # Voice agent system
-│       ├── api/          # API routes
-│       ├── adapters/     # Email/Calendar adapters
-│       ├── agents/       # AI agents
-│       ├── config/       # Configuration
-│       ├── models/       # Data models
-│       ├── utils/        # Utilities
-│       └── orchestrator.py
-├── config/               # Configuration files (created at runtime)
-├── requirements.txt      # Python dependencies
-├── .env.example         # Environment variables template
-└── README.md            # This file
-```
+### AI Features
+- ✅ **Inbox Overview** - AI-powered summary of important emails
+- ✅ **Interview Counter** - Counts upcoming interviews for the week
+- ✅ **Voice-Enabled** - Text-to-speech for inbox overviews
+- ✅ **Smart Prioritization** - AI reasoning for email importance
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Python 3.10 or higher
-- Gmail account with API access (optional for demo mode)
-- Google Calendar API access (optional for demo mode)
-- OpenAI/Anthropic/Google API key for LLM
-- ElevenLabs API key (optional for voice features)
+- Python 3.11 or higher
+- Gmail API credentials (optional - runs in mock mode without)
+- Google Calendar API credentials (optional - runs in mock mode without)
 
-## Quick Start
+## 🔧 Installation
 
-### 1. Install Dependencies
+### 1. Clone the Repository
 
 ```bash
-# Create virtual environment (recommended)
+git clone https://github.com/pbulbule13/talk2myinbox.git
+cd talk2myinbox
+```
+
+### 2. Set Up Python Virtual Environment
+
+**Windows:**
+```bash
+cd backend
 python -m venv venv
-
-# Activate virtual environment
-# On Windows:
 venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
+```
 
-# Install dependencies
+**Mac/Linux:**
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### 4. Configure Environment Variables (Optional)
+
+Create a `.env` file in the `backend` directory:
+
+```env
+# Gmail API (Optional - app works without these)
+GMAIL_CLIENT_ID=your_client_id
+GMAIL_CLIENT_SECRET=your_client_secret
+GMAIL_REFRESH_TOKEN=your_refresh_token
+
+# AI Provider (Optional)
+EURON_API_KEY=your_euron_api_key
+EURON_API_BASE=https://api.euron.one/api/v1/euri
+EURON_MODEL=gpt-4.1-nano
+
+# Server Configuration
+PORT=8000
+HOST=0.0.0.0
+```
+
+**Note:** The application runs in **mock mode** if Gmail credentials are not configured. You'll see sample emails and calendar events.
+
+## 🎯 Running the Application
+
+### Method 1: Direct Python Run (Recommended)
 
 ```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env and add your API keys
-# At minimum, you need one LLM API key (OpenAI, Anthropic, or Google)
-```
-
-### 3. Gmail Setup (Optional - can run in mock mode)
-
-If you want to connect to real Gmail:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a new project or select existing
-3. Enable Gmail API and Google Calendar API
-4. Create OAuth 2.0 credentials (Desktop app)
-5. Download credentials JSON and save as `config/gmail_credentials.json`
-6. Run the app - it will prompt for OAuth authorization on first run
-
-**OR** run in mock/demo mode by setting in `.env`:
-```
-EMAIL_MOCK_MODE=true
-CALENDAR_MOCK_MODE=true
-```
-
-### 4. Run the Server
-
-```bash
-# Navigate to backend directory
+# Make sure you're in the backend directory
 cd backend
+
+# Activate virtual environment (if not already active)
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
 
 # Run the server
 python server.py
 ```
 
-The server will start on `http://localhost:8000`
-
-### 5. Access the Application
-
-Open your browser and navigate to:
-- **App**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-
-## Configuration
-
-### Environment Variables
-
-See `.env.example` for all available configuration options.
-
-**Required**:
-- At least one LLM API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY)
-
-**Optional**:
-- Gmail/Calendar credentials (or use mock mode)
-- ElevenLabs for voice features
-- Custom port and host settings
-
-### Mock Mode
-
-For testing without real Gmail/Calendar access:
-
-```bash
-# In .env
-EMAIL_MOCK_MODE=true
-CALENDAR_MOCK_MODE=true
-```
-
-This will generate sample emails and calendar events for demo purposes.
-
-## API Endpoints
-
-### Voice Agent
-- `POST /voice-agent/query` - Process natural language queries
-- `GET /voice-agent/inbox/summary` - Get inbox summary
-- `POST /voice-agent/email/send` - Send email
-- `GET /voice-agent/emails` - Get email list
-- `GET /voice-agent/emails/search` - Search emails
-- `GET /voice-agent/calendar/events` - Get calendar events
-- `POST /voice-agent/tts` - Text-to-speech conversion
-- `WebSocket /voice-agent/ws` - Real-time voice interaction
-
-### Application
-- `GET /` - Main application page
-- `GET /health` - Health check
-- `GET /docs` - API documentation
-
-## Voice Interaction Modes
-
-The application supports three distinct interaction modes:
-
-### ⌨️ Text Mode
-- Type your queries in plain English
-- Read AI responses as text
-- Perfect for quiet environments
-
-### 🔊 Semi-Voice Mode
-- Type your queries
-- AI responses are spoken aloud via ElevenLabs TTS
-- Great for multitasking
-
-### 🎤 Full-Voice Mode
-- Speak your queries hands-free
-- AI responds with voice + text
-- Uses Web Speech API for recognition
-- Completely hands-free operation
-
-**See [VOICE_MODES_GUIDE.md](VOICE_MODES_GUIDE.md) for detailed instructions.**
-
-## Features in Detail
-
-### Email Categories
-
-Emails are automatically categorized into:
-- 🚨 **Urgent**: Time-sensitive emails
-- 💼 **Work**: Professional correspondence
-- 👤 **Personal**: Personal emails
-- 🎁 **Promotions**: Marketing and offers
-- 👥 **Social**: Social media notifications
-
-### AI Draft Generation
-
-The AI assistant can:
-- Generate intelligent email responses
-- Maintain context across conversations
-- Suggest appropriate tone and content
-- Require human approval before sending
-
-### Human Escalation
-
-When AI encounters complex scenarios:
-- User can manually escalate any email
-- Add notes for human reviewer
-- Track escalation status
-- Get expert human response
-
-## Development
-
-### Running in Development Mode
+### Method 2: Using Uvicorn Directly
 
 ```bash
 cd backend
-python server.py
+uvicorn server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The server runs with hot-reload enabled by default.
+## 🌐 Accessing the Application
 
-### Testing
+Once the server starts, you'll see:
+
+```
+========================================
+Communications App Server Starting
+========================================
+Server: http://0.0.0.0:8000
+API Docs: http://0.0.0.0:8000/docs
+Health: http://0.0.0.0:8000/health
+========================================
+```
+
+**Open your browser and navigate to:**
+- **Main App:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
+- **Health Check:** http://localhost:8000/health
+
+## 🎨 Using the Features
+
+### 1. Email Management
+
+**View Emails:**
+- Emails load automatically on page load
+- Use pagination controls at the bottom (← Prev / Next →)
+- Filter by category using the tabs at the top
+
+**Email Badges:**
+- 👤 **Human** - Email from a real person
+- 🤖 **Auto** - Automated/system email
+- 💬 **X msgs** - Number of messages in thread
+- 💼 **Job App** - Job application related
+- ⚠️ **Follow-up** - Needs your attention
+
+**Thread Viewer:**
+- Click "👁️ View Thread" on conversations with multiple messages
+- See all messages in chronological order
+- Reply directly from the thread viewer
+
+### 2. Calendar Features
+
+**View Calendar:**
+- Calendar events display automatically
+- Switch between Day and Week view
+
+**Manual Calendar Blocking:**
+Open browser console (F12) and run:
+```javascript
+// Block 1 hour for kids' school
+blockCalendarTime('Kids School', '2025-01-27T15:00:00', 60)
+```
+
+### 3. AI Inbox Overview
+
+Open browser console (F12) and run:
+```javascript
+// Get AI-powered inbox overview
+getInboxOverview()
+```
+
+This will show:
+- Important emails to review
+- Interview count for the week
+- Short, crisp summary
+- Click 🔊 **Speak** button to hear it read aloud
+
+## 📁 Project Structure
+
+```
+talk2myinbox/
+├── backend/
+│   ├── server.py                 # Main FastAPI server
+│   ├── requirements.txt          # Python dependencies
+│   ├── voice_agent/
+│   │   ├── api/
+│   │   │   └── routes.py        # API endpoints
+│   │   ├── adapters/
+│   │   │   ├── email/           # Gmail adapter
+│   │   │   └── calendar/        # Calendar adapter
+│   │   ├── agents/              # AI agents (8 total)
+│   │   ├── graph/               # LangGraph workflow
+│   │   ├── models/              # Pydantic models
+│   │   └── utils/               # Utilities
+│   └── tests/                   # Comprehensive test suite
+│       ├── unit/                # Unit tests
+│       ├── integration/         # Integration tests
+│       └── e2e/                 # End-to-end tests
+│
+└── frontend/
+    ├── index.html               # Main UI
+    ├── communications_enhanced.js  # Core app logic
+    ├── voice_module.js          # Voice controls
+    └── support.js               # Support features
+```
+
+## 🔍 API Endpoints
+
+### Email Endpoints
+- `GET /voice-agent/emails` - Get email list
+- `POST /voice-agent/email/send` - Send email
+- `POST /voice-agent/emails/search` - Search emails
+- `POST /voice-agent/email/mark-read` - Mark as read
+
+### Calendar Endpoints
+- `GET /voice-agent/calendar` - Get calendar events
+- `POST /voice-agent/calendar/event` - Create calendar event
+- `PUT /voice-agent/calendar/event/{id}` - Update event
+- `DELETE /voice-agent/calendar/event/{id}` - Delete event
+
+### AI Endpoints
+- `POST /voice-agent/query` - Process AI query
+- `POST /voice-agent/tts` - Text-to-speech
+
+**Full API documentation:** http://localhost:8000/docs
+
+## 🧪 Running Tests
 
 ```bash
-# Run tests
-pytest backend/voice_agent/tests/
+cd backend
+
+# Run all tests
+pytest
+
+# Run specific test suites
+pytest tests/unit/                    # Unit tests only
+pytest tests/integration/             # Integration tests only
+pytest tests/unit/test_orchestrator.py  # Specific test file
 
 # Run with coverage
-pytest --cov=voice_agent backend/voice_agent/tests/
+pytest --cov=voice_agent tests/
 ```
 
-### Project Dependencies
+## 🐛 Troubleshooting
 
-The project uses:
-- **FastAPI**: Modern web framework
-- **LangChain/LangGraph**: AI orchestration
-- **Google APIs**: Gmail and Calendar integration
-- **ElevenLabs**: Voice synthesis (optional)
-- **Anthropic/OpenAI/Google**: LLM providers
+### Issue: "Module not found" errors
 
-## Troubleshooting
-
-### Gmail Connection Issues
-
-1. Check credentials file exists: `config/gmail_credentials.json`
-2. Verify OAuth scopes include Gmail access
-3. Try deleting `config/gmail_token.json` and re-authenticating
-4. Use mock mode for testing: `EMAIL_MOCK_MODE=true`
-
-### Calendar Issues
-
-1. Enable Google Calendar API in Cloud Console
-2. Verify credentials have Calendar scope
-3. Use mock mode for testing: `CALENDAR_MOCK_MODE=true`
-
-### Voice Features Not Working
-
-1. Check ElevenLabs API key in `.env`
-2. Voice features are optional - app works without them
-3. Comment out voice libraries in requirements.txt if causing issues
-
-### Port Already in Use
-
+**Solution:**
 ```bash
-# Change port in .env
-PORT=8001
+# Ensure virtual environment is activated
+cd backend
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
+source venv/bin/activate
+
+# Reinstall dependencies
+pip install -r requirements.txt
 ```
 
-## Security Notes
+### Issue: Emails not loading
 
-- Never commit `.env` file or credentials to version control
-- Keep API keys secure and rotate regularly
-- Use OAuth tokens instead of passwords
-- Review Gmail API permissions carefully
-- Enable 2FA on Google account
+**Solution:**
+1. Check server logs for errors
+2. The app works in **mock mode** without Gmail credentials
+3. If using real Gmail, ensure credentials are correct in `.env`
+4. Check browser console (F12) for JavaScript errors
 
-## License
+### Issue: Calendar errors
 
-This project is provided as-is for personal use.
+**Solution:**
+- Calendar works in mock mode by default
+- Check that `/voice-agent/calendar` endpoint returns data
+- Visit http://localhost:8000/docs to test API directly
 
-## Support
+### Issue: Port 8000 already in use
 
-For issues or questions:
-1. Check troubleshooting section
-2. Review API documentation at `/docs`
-3. Check server logs for error details
-4. Ensure all environment variables are set correctly
+**Solution:**
+```bash
+# Windows: Kill process on port 8000
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
 
-## Deployment
+# Mac/Linux:
+lsof -ti:8000 | xargs kill -9
 
-### Local Deployment
+# Or use a different port
+PORT=8080 python server.py
+```
 
-Already configured for local deployment - just follow Quick Start.
+## 📊 Features Breakdown
 
-### Cloud Deployment (Optional)
+### Email Detection Algorithm
+- **Scoring System** for human vs automated detection
+- **Personal Domain Recognition** (Gmail, Yahoo, etc.)
+- **Reply/Forward Pattern Analysis**
+- **Conversation Indicators** (greetings, questions, requests)
+- **Automated Pattern Recognition** (newsletters, notifications)
 
-For production deployment:
+### Thread Grouping
+- Groups emails by participants + subject
+- Removes Re:/Fwd: prefixes for accurate grouping
+- Tracks message count and unread status
+- Prioritizes threads with >2 messages
+- Special handling for job applications
 
-1. Set environment variables in cloud platform
-2. Configure OAuth redirect URIs
-3. Use production-grade WSGI server
-4. Enable HTTPS
-5. Set proper CORS origins
-6. Use secrets management service
+### Calendar Auto-Detection
+- Scans email content for meeting keywords
+- Extracts time and date patterns
+- Creates calendar events automatically
+- No authorization required (as requested)
 
-## Roadmap
+## 🤝 Contributing
 
-Future enhancements:
-- [ ] Multi-account email support
-- [ ] Advanced email search and filters
-- [ ] Email templates library
-- [ ] Scheduled email sending
-- [ ] Integration with more email providers
-- [ ] Mobile app version
-- [ ] Team collaboration features
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Version
+## 📝 License
 
-Current version: 1.0.0
+This project is licensed under the MIT License.
 
-## Credits
+## 🙏 Acknowledgments
 
-Built with FastAPI, LangChain, Google APIs, and modern web technologies.
+- Built with FastAPI, LangChain, and LangGraph
+- Uses Gmail and Google Calendar APIs
+- AI-powered by Euron API / OpenAI / Anthropic Claude
+- Frontend styled with Tailwind CSS
+
+---
+
+## 🆘 Need Help?
+
+- **Issues:** https://github.com/pbulbule13/talk2myinbox/issues
+- **Documentation:** Check the `/docs` endpoint when server is running
+- **API Testing:** Use http://localhost:8000/docs for interactive API testing
+
+**Made with ❤️ and AI assistance**
