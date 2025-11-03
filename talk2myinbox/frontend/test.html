@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Loading Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Email Loading Test</h1>
+    <div id="status">Testing...</div>
+    <div id="logs"></div>
+    <hr>
+    <h2>Raw Data:</h2>
+    <pre id="raw-data"></pre>
+
+    <script>
+        const API = 'http://localhost:8000';
+        const logs = document.getElementById('logs');
+        const rawData = document.getElementById('raw-data');
+        const status = document.getElementById('status');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        async function testEmailLoading() {
+            try {
+                log('Starting test...', 'info');
+
+                const url = `${API}/voice-agent/emails?max_results=30`;
+                log(`Fetching from: ${url}`, 'info');
+
+                const response = await fetch(url);
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log(`Received data with ${data.emails ? data.emails.length : 0} emails`, 'success');
+
+                rawData.textContent = JSON.stringify(data, null, 2);
+
+                if (data.emails && data.emails.length > 0) {
+                    status.innerHTML = `<span class="success">✓ SUCCESS: Loaded ${data.emails.length} emails</span>`;
+
+                    // Display emails
+                    const emailList = document.createElement('div');
+                    emailList.innerHTML = '<h2>Emails:</h2>';
+                    data.emails.forEach((email, idx) => {
+                        const div = document.createElement('div');
+                        div.style.padding = '10px';
+                        div.style.border = '1px solid #ddd';
+                        div.style.margin = '5px 0';
+                        div.innerHTML = `
+                            <strong>${idx + 1}. ${email.from}</strong><br>
+                            Subject: ${email.subject}<br>
+                            Preview: ${email.preview || email.body || 'No preview'}
+                        `;
+                        emailList.appendChild(div);
+                    });
+                    document.body.appendChild(emailList);
+                } else {
+                    status.innerHTML = '<span class="error">✗ No emails in response</span>';
+                }
+
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+                status.innerHTML = `<span class="error">✗ FAILED: ${error.message}</span>`;
+                console.error('Full error:', error);
+            }
+        }
+
+        // Run test on page load
+        window.addEventListener('DOMContentLoaded', testEmailLoading);
+    </script>
+</body>
+</html>

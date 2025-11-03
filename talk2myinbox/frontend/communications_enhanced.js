@@ -463,25 +463,68 @@ async function loadAllEmails(gmailQuery) {
 
         // Categorize emails
         console.log('[Communications] Categorizing emails...');
-        window.communicationsState.emails = emails.map(email => ({
-            ...email,
-            category: categorizeEmail(email),
-            isHuman: detectHumanEmail(email),
-            timestamp: email.timestamp || email.date
-        }));
+        try {
+            window.communicationsState.emails = emails.map(email => ({
+                ...email,
+                category: categorizeEmail(email),
+                isHuman: detectHumanEmail(email),
+                timestamp: email.timestamp || email.date
+            }));
+            console.log('[Communications] ✓ Categorization complete');
+        } catch (catError) {
+            console.error('[Communications] Error during categorization:', catError);
+            // Fallback: use emails without categorization
+            window.communicationsState.emails = emails.map(email => ({
+                ...email,
+                category: 'all',
+                isHuman: true,
+                timestamp: email.timestamp || email.date
+            }));
+        }
 
         // Group by thread
         console.log('[Communications] Grouping by thread...');
-        window.communicationsState.threads = groupEmailsByThread(window.communicationsState.emails);
+        try {
+            window.communicationsState.threads = groupEmailsByThread(window.communicationsState.emails);
+            console.log(`[Communications] ✓ Created ${window.communicationsState.threads.length} threads`);
+        } catch (threadError) {
+            console.error('[Communications] Error during thread grouping:', threadError);
+            // Fallback: no threading
+            window.communicationsState.threads = [];
+        }
 
         console.log(`[Communications] ✓ Loaded ${emails.length} emails, ${window.communicationsState.threads.length} threads`);
 
-        renderEmailList();
+        console.log('[Communications] Rendering email list...');
+        try {
+            renderEmailList();
+            console.log('[Communications] ✓ Render complete');
+        } catch (renderError) {
+            console.error('[Communications] Error during rendering:', renderError);
+            // Show error in UI
+            emailList.innerHTML = `
+                <div class="p-6 text-center text-red-600">
+                    <p class="text-sm font-semibold">⚠️ Error Rendering Emails</p>
+                    <p class="text-xs mt-2">${escapeHtml(renderError.message)}</p>
+                    <p class="text-xs mt-2">Emails loaded but display failed. Check console for details.</p>
+                    <button onclick="location.reload()"
+                            class="mt-3 text-xs bg-blue-600 text-white px-3 py-1.5 rounded">
+                        Reload Page
+                    </button>
+                </div>
+            `;
+            throw renderError; // Re-throw to see full stack trace
+        }
+
         updateCategoryBadges();
 
         // Auto-detect calendar invites
         console.log('[Communications] Auto-detecting calendar invites...');
-        autoDetectCalendarInvites();
+        try {
+            autoDetectCalendarInvites();
+        } catch (calError) {
+            console.warn('[Communications] Calendar auto-detect failed:', calError);
+        }
 
     } catch (error) {
         console.error('[Communications] ✗ Error loading emails:', error);
