@@ -320,12 +320,15 @@ async def get_emails(max_results: int = 10, query: str | None = None, unread_onl
         # Format for dashboard
         emails = []
         for thread in threads:
+            timestamp = thread.get("timestamp", "")
             emails.append({
                 "id": thread.get("thread_id", ""),
                 "from": thread.get("from", "Unknown"),
                 "subject": thread.get("subject", "No Subject"),
                 "preview": thread.get("preview", "")[:200],
-                "date": thread.get("timestamp", ""),
+                "body": thread.get("preview", ""),  # Add body field for frontend
+                "date": timestamp,
+                "timestamp": timestamp,  # Add timestamp field for frontend compatibility
                 "unread": thread.get("unread", False)
             })
 
