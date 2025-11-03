@@ -68,6 +68,10 @@ router = APIRouter(prefix="/voice-agent", tags=["voice-agent"])
 
 # Initialize orchestrator (in production, use dependency injection)
 class _StubOrchestrator:
+    def __init__(self):
+        self.calendar_adapter = None
+        self.email_adapter = None
+
     async def process_query(self, *args, **kwargs):
         return {"text": "stub", "intent": "unknown", "drafts": [], "calendar_actions": [], "executed": [], "logs": []}
 
