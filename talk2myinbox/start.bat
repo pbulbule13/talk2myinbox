@@ -100,16 +100,36 @@ echo  API Docs: http://localhost:8000/docs
 echo  Status: Starting...
 echo ========================================
 echo.
+echo Opening application in browser...
 echo Press Ctrl+C to stop the server
 echo.
 
-REM Start the server using uv run
-.venv\Scripts\python.exe server.py
+REM Start the server in background and wait for it to be ready
+start /B .venv\Scripts\python.exe server.py
 
-REM If server stops, show message
+REM Wait 3 seconds for server to start
+timeout /t 3 /nobreak >nul
+
+REM Open browser
+start http://localhost:8000
+
+REM Keep the window open and show logs
 echo.
 echo ========================================
-echo  Server Stopped
+echo  Application Running
+echo ========================================
+echo  Browser opened: http://localhost:8000
+echo  Server is running in background
+echo  Press any key to stop the server...
 echo ========================================
 echo.
+pause >nul
+
+REM Kill the server when user presses a key
+echo.
+echo Stopping server...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
+echo Server stopped.
 pause

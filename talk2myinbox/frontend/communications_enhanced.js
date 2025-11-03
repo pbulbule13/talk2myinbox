@@ -422,22 +422,47 @@ function groupEmailsByThread(emails) {
  */
 async function loadAllEmails(gmailQuery) {
     console.log('[Communications] Loading Gmail emails...');
+    console.log('[Communications] API URL:', COMM_API);
+
+    const emailList = document.getElementById('email-list');
 
     try {
         const url = new URL(`${COMM_API}/voice-agent/emails`);
         url.searchParams.set('max_results', '30'); // Show 30 emails minimum
         if (gmailQuery) url.searchParams.set('query', gmailQuery);
 
+        console.log('[Communications] Fetching from:', url.toString());
+
         const response = await fetch(url.toString());
 
+        console.log('[Communications] Response status:', response.status);
+
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('[Communications] Received data:', data);
+
         const emails = data.emails || [];
 
+        if (emails.length === 0) {
+            console.warn('[Communications] No emails returned from API');
+            emailList.innerHTML = `
+                <div class="p-6 text-center text-yellow-600">
+                    <p class="text-sm font-semibold">No emails found</p>
+                    <p class="text-xs mt-2">Your inbox appears to be empty</p>
+                    <button onclick="refreshCommunications()"
+                            class="mt-3 text-xs bg-blue-600 text-white px-3 py-1.5 rounded">
+                        Refresh
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
         // Categorize emails
+        console.log('[Communications] Categorizing emails...');
         window.communicationsState.emails = emails.map(email => ({
             ...email,
             category: categorizeEmail(email),
@@ -446,18 +471,35 @@ async function loadAllEmails(gmailQuery) {
         }));
 
         // Group by thread
+        console.log('[Communications] Grouping by thread...');
         window.communicationsState.threads = groupEmailsByThread(window.communicationsState.emails);
 
-        console.log(`[Communications] Loaded ${emails.length} emails, ${window.communicationsState.threads.length} threads`);
+        console.log(`[Communications] ✓ Loaded ${emails.length} emails, ${window.communicationsState.threads.length} threads`);
+
         renderEmailList();
         updateCategoryBadges();
 
         // Auto-detect calendar invites
+        console.log('[Communications] Auto-detecting calendar invites...');
         autoDetectCalendarInvites();
 
     } catch (error) {
-        console.error('[Communications] Error loading emails:', error);
-        showError('email-list', error.message);
+        console.error('[Communications] ✗ Error loading emails:', error);
+        console.error('[Communications] Error stack:', error.stack);
+
+        emailList.innerHTML = `
+            <div class="p-6 text-center text-red-600">
+                <p class="text-sm font-semibold">⚠️ Error Loading Emails</p>
+                <p class="text-xs mt-2 text-gray-700">${escapeHtml(error.message)}</p>
+                <p class="text-xs mt-1 text-gray-500">Check console (F12) for details</p>
+                <button onclick="refreshCommunications()"
+                        class="mt-3 text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">
+                    🔄 Retry
+                </button>
+            </div>
+        `;
+
+        showNotification('Failed to load emails: ' + error.message, 'error', 5000);
     }
 }
 
