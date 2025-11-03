@@ -14,7 +14,9 @@ window.communicationsState = {
     calendar: [],
     reminders: [],
     calendarView: 'day', // 'day' or 'week'
-    threads: {}
+    threads: {},
+    currentPage: 1,
+    emailsPerPage: 10
 };
 
 /**
@@ -162,38 +164,106 @@ const EMAIL_CATEGORIES = {
  * Detect if email is from a human (vs automated system)
  */
 function detectHumanEmail(email) {
-    const from = email.from.toLowerCase();
+    const from = (email.from || '').toLowerCase();
     const subject = (email.subject || '').toLowerCase();
     const preview = (email.preview || email.body || '').toLowerCase();
 
-    // Automated email indicators
-    const automatedIndicators = [
-        'noreply', 'no-reply', 'donotreply', 'automated', 'notification',
-        'alerts', 'newsletter', 'subscriptions', 'update', 'digest',
-        'unsubscribe', 'confirm your', 'verify your', 'reset your password'
+    // Strong automated email indicators in FROM address
+    const strongAutomatedFromIndicators = [
+        'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+        'automated', 'notification', 'alerts@', 'newsletter',
+        'notifications@', 'info@', 'support@', 'team@',
+        'hello@', 'welcome@', 'updates@', 'news@',
+        'bounces', 'mailer-daemon', 'postmaster',
+        'listserv', 'majordomo'
     ];
 
-    // Check if from address has automated indicators
-    if (automatedIndicators.some(indicator => from.includes(indicator))) {
+    // Check if from address has strong automated indicators
+    if (strongAutomatedFromIndicators.some(indicator => from.includes(indicator))) {
         return false;
     }
 
-    // Check if subject/content has automated patterns
-    if (automatedIndicators.some(indicator => subject.includes(indicator) || preview.includes(indicator))) {
+    // Personal email domain indicators (strong signal for human)
+    const personalDomains = [
+        '@gmail.com', '@yahoo.com', '@outlook.com', '@hotmail.com',
+        '@icloud.com', '@aol.com', '@protonmail.com', '@me.com'
+    ];
+
+    const isPersonalDomain = personalDomains.some(domain => from.includes(domain));
+
+    // Automated subject patterns
+    const automatedSubjectPatterns = [
+        'unsubscribe', 'newsletter', 'digest', 'subscription',
+        'confirm your', 'verify your', 'reset your password',
+        'your order', 'order confirmation', 'receipt from',
+        'action required', 'account notification', '[automated]',
+        'weekly update', 'monthly update', 'daily update'
+    ];
+
+    const hasAutomatedSubject = automatedSubjectPatterns.some(pattern =>
+        subject.includes(pattern)
+    );
+
+    // Check for reply/forward patterns (strong signal for human conversation)
+    const isReplyOrForward = /^(re|fwd|fw):\s*/i.test(email.subject || '');
+
+    // Human conversation indicators (questions, requests, greetings)
+    const humanConversationIndicators = [
+        'dear ', 'hi ', 'hello ', 'hey ', 'good morning', 'good afternoon',
+        'thanks', 'thank you', 'regards', 'best regards', 'sincerely',
+        'could you', 'can you', 'would you', 'will you', 'please',
+        'let me know', 'get back to me', 'looking forward',
+        'what do you think', 'what are your thoughts', 'any questions',
+        'just wanted to', 'wanted to reach out', 'wanted to check',
+        'hope you', 'hope all', 'hope this finds you',
+        'attached is', 'please find attached', 'i\'ve attached',
+        'let\'s', 'we should', 'we need to', 'can we',
+        'quick question', 'i have a question', 'wondering if'
+    ];
+
+    const hasHumanConversation = humanConversationIndicators.some(indicator =>
+        preview.includes(indicator) || subject.includes(indicator)
+    );
+
+    // Scoring system for better detection
+    let humanScore = 0;
+    let automatedScore = 0;
+
+    if (isPersonalDomain) humanScore += 3;
+    if (isReplyOrForward) humanScore += 2;
+    if (hasHumanConversation) humanScore += 2;
+    if (hasAutomatedSubject) automatedScore += 2;
+
+    // Check for automated content patterns
+    const automatedContentPatterns = [
+        'unsubscribe', 'this is an automated message',
+        'do not reply to this email', 'this email was sent automatically',
+        'click here to confirm', 'verify your email',
+        'your verification code', 'opt out', 'manage preferences'
+    ];
+
+    if (automatedContentPatterns.some(pattern => preview.includes(pattern))) {
+        automatedScore += 2;
+    }
+
+    // Final decision based on scores
+    if (automatedScore > humanScore) {
         return false;
     }
 
-    // Human indicators
-    const humanIndicators = [
-        'dear', 'hi ', 'hello', 'thanks', 'thank you', 'regards', 'sincerely',
-        'could you', 'can you', 'would you', 'please', 'let me know'
-    ];
-
-    if (humanIndicators.some(indicator => preview.includes(indicator))) {
+    if (humanScore > 0) {
         return true;
     }
 
-    // Default: consider as human if no clear automated indicators
+    // Default: if it looks like a real person's email (has name-like patterns)
+    // and doesn't have automated indicators, consider it human
+    const hasNamePattern = /^[a-z\s]+<[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}>$/i.test(email.from || '');
+
+    if (hasNamePattern && !hasAutomatedSubject) {
+        return true;
+    }
+
+    // Default to human if uncertain (better user experience)
     return true;
 }
 
@@ -259,7 +329,29 @@ function generateThreadKey(participants, subject) {
 }
 
 /**
- * Group emails by conversation thread
+ * Detect if thread is job application related
+ */
+function isJobApplicationThread(emails, subject) {
+    const jobKeywords = [
+        'application', 'interview', 'position', 'job', 'hiring',
+        'candidate', 'resume', 'cv', 'opportunity', 'recruiter',
+        'recruitment', 'apply', 'vacancy', 'career'
+    ];
+
+    const subjectLower = subject.toLowerCase();
+    const hasJobKeyword = jobKeywords.some(keyword => subjectLower.includes(keyword));
+
+    // Check if any email content mentions job-related terms
+    const hasJobContent = emails.some(email => {
+        const content = `${email.subject} ${email.preview || email.body || ''}`.toLowerCase();
+        return jobKeywords.some(keyword => content.includes(keyword));
+    });
+
+    return hasJobKeyword || hasJobContent;
+}
+
+/**
+ * Group emails by conversation thread with enhanced detection
  */
 function groupEmailsByThread(emails) {
     const threads = {};
@@ -275,11 +367,15 @@ function groupEmailsByThread(emails) {
                 participants: participants,
                 emails: [],
                 lastTimestamp: email.timestamp || email.date,
-                unreadCount: 0
+                unreadCount: 0,
+                messageCount: 0,
+                isJobApplication: false,
+                needsFollowUp: false
             };
         }
 
         threads[threadKey].emails.push(email);
+        threads[threadKey].messageCount++;
         if (email.unread) threads[threadKey].unreadCount++;
 
         // Update last timestamp
@@ -290,7 +386,33 @@ function groupEmailsByThread(emails) {
         }
     });
 
+    // Post-process threads to detect special categories
+    Object.values(threads).forEach(thread => {
+        // Detect job application threads
+        thread.isJobApplication = isJobApplicationThread(thread.emails, thread.subject);
+
+        // Mark threads with >2 messages as needing follow-up
+        thread.needsFollowUp = thread.messageCount > 2;
+
+        // Special handling for job applications with >2 emails
+        if (thread.isJobApplication && thread.messageCount > 2) {
+            thread.category = 'job_application_active';
+        } else if (thread.needsFollowUp) {
+            thread.category = 'ongoing_conversation';
+        }
+    });
+
+    // Sort: prioritize threads needing follow-up and recent activity
     return Object.values(threads).sort((a, b) => {
+        // First, prioritize job applications with >2 messages
+        if (a.isJobApplication && a.messageCount > 2 && !(b.isJobApplication && b.messageCount > 2)) return -1;
+        if (b.isJobApplication && b.messageCount > 2 && !(a.isJobApplication && a.messageCount > 2)) return 1;
+
+        // Then, prioritize threads needing follow-up
+        if (a.needsFollowUp && !b.needsFollowUp) return -1;
+        if (b.needsFollowUp && !a.needsFollowUp) return 1;
+
+        // Finally, sort by timestamp
         return new Date(b.lastTimestamp) - new Date(a.lastTimestamp);
     });
 }
@@ -303,7 +425,7 @@ async function loadAllEmails(gmailQuery) {
 
     try {
         const url = new URL(`${COMM_API}/voice-agent/emails`);
-        url.searchParams.set('max_results', '25'); // Increased to 25 for better coverage
+        url.searchParams.set('max_results', '30'); // Show 30 emails minimum
         if (gmailQuery) url.searchParams.set('query', gmailQuery);
 
         const response = await fetch(url.toString());
@@ -330,6 +452,9 @@ async function loadAllEmails(gmailQuery) {
         renderEmailList();
         updateCategoryBadges();
 
+        // Auto-detect calendar invites
+        autoDetectCalendarInvites();
+
     } catch (error) {
         console.error('[Communications] Error loading emails:', error);
         showError('email-list', error.message);
@@ -337,7 +462,7 @@ async function loadAllEmails(gmailQuery) {
 }
 
 /**
- * Render email list with enhanced UI
+ * Render email list with enhanced UI and pagination
  */
 function renderEmailList() {
     const emailList = document.getElementById('email-list');
@@ -357,15 +482,31 @@ function renderEmailList() {
         return;
     }
 
-    emailList.innerHTML = filteredEmails.map(email => `
+    // Pagination
+    const totalPages = Math.ceil(filteredEmails.length / window.communicationsState.emailsPerPage);
+    const currentPage = window.communicationsState.currentPage;
+    const startIdx = (currentPage - 1) * window.communicationsState.emailsPerPage;
+    const endIdx = startIdx + window.communicationsState.emailsPerPage;
+    const paginatedEmails = filteredEmails.slice(startIdx, endIdx);
+
+    const emailsHTML = paginatedEmails.map(email => {
+        // Find thread info for this email
+        const thread = window.communicationsState.threads?.find(t =>
+            t.emails.some(e => e.id === email.id)
+        );
+
+        return `
         <div class="email-item border-b border-gray-200 p-4 hover:bg-gray-50 cursor-pointer transition-all"
              onclick="selectEmail('${email.id}')">
             <div class="flex justify-between items-start mb-1">
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="font-semibold text-gray-900 text-sm">${escapeHtml(email.from)}</span>
                         ${email.isHuman ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">👤 Human</span>' : '<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">🤖 Auto</span>'}
                         ${email.unread ? '<span class="w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
+                        ${thread && thread.messageCount > 2 ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">💬 ${thread.messageCount} msgs</span>` : ''}
+                        ${thread && thread.isJobApplication ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">💼 Job App</span>' : ''}
+                        ${thread && thread.needsFollowUp ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⚠️ Follow-up</span>' : ''}
                     </div>
                     <div class="text-sm font-medium text-gray-800 line-clamp-1">${escapeHtml(email.subject)}</div>
                     <div class="text-xs text-gray-600 line-clamp-2">${escapeHtml(email.preview || email.body || '')}</div>
@@ -381,9 +522,60 @@ function renderEmailList() {
                         class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-semibold">
                     ✓ Read
                 </button>
+                ${thread && thread.messageCount > 1 ? `
+                <button onclick="event.stopPropagation(); viewThread('${thread.id}')"
+                        class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded font-semibold">
+                    👁️ View Thread
+                </button>
+                ` : ''}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
+
+    // Pagination controls
+    const paginationHTML = totalPages > 1 ? `
+        <div class="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
+            <div class="text-xs text-gray-600">
+                Showing ${startIdx + 1}-${Math.min(endIdx, filteredEmails.length)} of ${filteredEmails.length} emails
+            </div>
+            <div class="flex gap-2">
+                <button onclick="changePage(${currentPage - 1})"
+                        ${currentPage === 1 ? 'disabled' : ''}
+                        class="px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                    ← Prev
+                </button>
+                <div class="text-xs text-gray-600 px-3 py-1">
+                    Page ${currentPage} of ${totalPages}
+                </div>
+                <button onclick="changePage(${currentPage + 1})"
+                        ${currentPage === totalPages ? 'disabled' : ''}
+                        class="px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next →
+                </button>
+            </div>
+        </div>
+    ` : '';
+
+    emailList.innerHTML = emailsHTML + paginationHTML;
+}
+
+/**
+ * Change current page
+ */
+function changePage(page) {
+    const category = window.communicationsState.currentCategory;
+    let filteredEmails = window.communicationsState.emails;
+    if (category !== 'all') {
+        filteredEmails = filteredEmails.filter(email => email.category === category);
+    }
+
+    const totalPages = Math.ceil(filteredEmails.length / window.communicationsState.emailsPerPage);
+
+    if (page < 1 || page > totalPages) return;
+
+    window.communicationsState.currentPage = page;
+    renderEmailList();
 }
 
 /**
@@ -978,6 +1170,279 @@ function showError(elementId, message) {
                 </button>
             </div>
         `;
+    }
+}
+
+/**
+ * Detect calendar invite in email content
+ */
+function detectCalendarInvite(email) {
+    const subject = (email.subject || '').toLowerCase();
+    const body = (email.preview || email.body || '').toLowerCase();
+    const content = `${subject} ${body}`;
+
+    // Calendar invite keywords
+    const inviteKeywords = [
+        'meeting', 'interview', 'call', 'conference', 'appointment',
+        'schedule', 'calendar', 'zoom', 'teams', 'google meet',
+        'join us', 'invited to', 'booking', 'reservation'
+    ];
+
+    // Time patterns
+    const timePatterns = [
+        /\d{1,2}:\d{2}\s*(am|pm)/gi,
+        /\d{1,2}\s*(am|pm)/gi,
+        /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi,
+        /(tomorrow|today|next week|this week)/gi,
+        /\d{1,2}\/\d{1,2}\/\d{2,4}/gi,
+        /(january|february|march|april|may|june|july|august|september|october|november|december)/gi
+    ];
+
+    const hasInviteKeyword = inviteKeywords.some(keyword => content.includes(keyword));
+    const hasTimePattern = timePatterns.some(pattern => pattern.test(content));
+
+    if (hasInviteKeyword && hasTimePattern) {
+        // Try to extract meeting details
+        return extractMeetingDetails(email);
+    }
+
+    return null;
+}
+
+/**
+ * Extract meeting details from email
+ */
+function extractMeetingDetails(email) {
+    const subject = email.subject || 'Meeting';
+    const body = email.preview || email.body || '';
+
+    // Simple extraction (can be enhanced with NLP)
+    const timeMatch = body.match(/(\d{1,2}:\d{2}\s*(am|pm)|(\d{1,2}\s*(am|pm)))/i);
+    const dateMatch = body.match(/(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|\d{1,2}\/\d{1,2}\/\d{2,4})/i);
+
+    return {
+        title: subject.replace(/^(re|fwd|fw):\s*/i, '').trim(),
+        suggestedTime: timeMatch ? timeMatch[0] : null,
+        suggestedDate: dateMatch ? dateMatch[0] : null,
+        duration: 60, // Default 1 hour
+        emailId: email.id
+    };
+}
+
+/**
+ * Auto-detect and suggest calendar blocking for emails
+ */
+async function autoDetectCalendarInvites() {
+    const emails = window.communicationsState.emails || [];
+    const invites = [];
+
+    emails.forEach(email => {
+        const invite = detectCalendarInvite(email);
+        if (invite) {
+            invites.push(invite);
+        }
+    });
+
+    if (invites.length > 0) {
+        console.log(`[Calendar] Detected ${invites.length} calendar invites`);
+
+        // Show notification to user
+        showNotification(
+            `Detected ${invites.length} calendar invite(s) in your emails. Click to review.`,
+            'info',
+            5000
+        );
+
+        // Optionally auto-create calendar events
+        for (const invite of invites) {
+            await proposeCalendarBlock(invite);
+        }
+    }
+}
+
+/**
+ * Propose calendar blocking for detected invite
+ */
+async function proposeCalendarBlock(invite) {
+    // Auto-create event without asking for authorization (as requested)
+    try {
+        const response = await fetch(`${COMM_API}/voice-agent/calendar/event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: invite.title,
+                start: invite.suggestedDate && invite.suggestedTime ?
+                    `${invite.suggestedDate} ${invite.suggestedTime}` : new Date().toISOString(),
+                duration: invite.duration,
+                auto_created: true,
+                source_email_id: invite.emailId
+            })
+        });
+
+        if (response.ok) {
+            console.log(`[Calendar] Auto-created event: ${invite.title}`);
+        }
+    } catch (error) {
+        console.error('[Calendar] Error auto-creating event:', error);
+    }
+}
+
+/**
+ * View full conversation thread
+ */
+function viewThread(threadId) {
+    const thread = window.communicationsState.threads?.find(t => t.id === threadId);
+    if (!thread) return;
+
+    // Create modal to show thread
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">${escapeHtml(thread.subject)}</h2>
+                    <p class="text-sm text-gray-600">${thread.messageCount} messages • ${thread.participants.length} participants</p>
+                    <div class="flex gap-2 mt-2">
+                        ${thread.isJobApplication ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">💼 Job Application</span>' : ''}
+                        ${thread.needsFollowUp ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">⚠️ Needs Follow-up</span>' : ''}
+                    </div>
+                </div>
+                <button onclick="this.closest('.fixed').remove()"
+                        class="text-gray-500 hover:text-gray-700 text-2xl">
+                    ×
+                </button>
+            </div>
+            <div class="space-y-4">
+                ${thread.emails.map(email => `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="font-semibold text-gray-900">${escapeHtml(email.from)}</div>
+                                <div class="text-xs text-gray-500">${formatTime(email.timestamp)}</div>
+                            </div>
+                            ${email.unread ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Unread</span>' : ''}
+                        </div>
+                        <div class="text-sm text-gray-800 whitespace-pre-wrap">${escapeHtml(email.body || email.preview || '')}</div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="draftReplyForEmail('${email.id}'); this.closest('.fixed').remove();"
+                                    class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold">
+                                ✍️ Reply
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+/**
+ * Get inbox overview with AI reasoning
+ */
+async function getInboxOverview() {
+    try {
+        const response = await fetch(`${COMM_API}/voice-agent/query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: "Give me a short overview of my inbox. How many interviews do I have this week? What emails need immediate attention?",
+                user_id: "user_001",
+                mode: "text"
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const overview = data.response || data.text_response || '';
+
+        // Show overview in notification or modal
+        showInboxOverviewModal(overview);
+
+        return overview;
+    } catch (error) {
+        console.error('[Overview] Error:', error);
+        showNotification('Could not generate inbox overview', 'error');
+    }
+}
+
+/**
+ * Show inbox overview modal with voice capability
+ */
+function showInboxOverviewModal(overview) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 shadow-xl">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-xl font-bold text-gray-900">📬 Inbox Overview</h2>
+                <button onclick="this.closest('.fixed').remove()"
+                        class="text-gray-500 hover:text-gray-700 text-2xl">
+                    ×
+                </button>
+            </div>
+            <div class="text-gray-800 whitespace-pre-wrap mb-4">${escapeHtml(overview)}</div>
+            <div class="flex gap-2">
+                <button onclick="speakText('${escapeHtml(overview).replace(/'/g, '\\'')}')"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold">
+                    🔊 Speak
+                </button>
+                <button onclick="this.closest('.fixed').remove()"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-semibold">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+/**
+ * Speak text using Text-to-Speech
+ */
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        window.speechSynthesis.speak(utterance);
+    } else {
+        showNotification('Text-to-speech not supported in this browser', 'error');
+    }
+}
+
+/**
+ * Block calendar time (e.g., 1 hour for kids school)
+ */
+async function blockCalendarTime(title, startTime, duration = 60) {
+    try {
+        const response = await fetch(`${COMM_API}/voice-agent/calendar/event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                start: startTime,
+                duration: duration,
+                auto_created: false
+            })
+        });
+
+        if (response.ok) {
+            showNotification(`Calendar blocked: ${title}`, 'success');
+            loadCalendar(); // Refresh calendar
+        } else {
+            throw new Error(`Failed to block calendar: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('[Calendar] Error blocking time:', error);
+        showNotification('Failed to block calendar time', 'error');
     }
 }
 

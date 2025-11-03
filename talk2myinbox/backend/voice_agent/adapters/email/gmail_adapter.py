@@ -86,7 +86,8 @@ class GmailAdapter(BaseEmailAdapter):
 
             # Convert to our format
             thread_list = []
-            for thread in threads[:min(5, len(threads))]:  # Limit to 5 for performance
+            # Process all threads up to max_results
+            for thread in threads[:max_results]:
                 thread_data = await self.get_thread(thread['id'])
                 if thread_data:
                     thread_list.append(thread_data)
