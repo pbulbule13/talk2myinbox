@@ -26,9 +26,28 @@ class GmailAdapter(BaseEmailAdapter):
         token_path: str | None = None,
         use_mock: bool = False
     ):
+        import os
+        from dotenv import load_dotenv
+
+        # Force reload .env file
+        load_dotenv(override=True)
+
+        # Check for EMAIL_MOCK_MODE environment variable
+        email_mock_mode = os.getenv("EMAIL_MOCK_MODE", "false").lower() == "true"
+
         self.credentials_path = credentials_path or "./config/gmail_credentials.json"
         self.token_path = token_path or "./config/gmail_token.pickle"
-        self.use_mock = use_mock  # For testing without real Gmail
+        self.use_mock = use_mock or email_mock_mode  # For testing without real Gmail
+
+        # Log to file for debugging
+        import sys
+        sys.stdout.flush()
+        print(f"[GmailAdapter] Initializing - use_mock={self.use_mock}, EMAIL_MOCK_MODE={email_mock_mode}", flush=True)
+
+        with open("gmail_debug.log", "a") as f:
+            f.write(f"[GmailAdapter Init] use_mock={self.use_mock}, EMAIL_MOCK_MODE={email_mock_mode}\n")
+            f.write(f"[GmailAdapter Init] CLIENT_ID={os.getenv('GMAIL_CLIENT_ID', 'NOT SET')}\n")
+            f.flush()
 
         # Initialize OAuth handler (using environment variables)
         self.oauth_handler = GmailOAuthEnvHandler()
@@ -40,20 +59,19 @@ class GmailAdapter(BaseEmailAdapter):
     def service(self):
         """Lazy load Gmail service"""
         if self.use_mock:
-            return None
+            raise Exception("MOCK MODE IS DISABLED! Gmail credentials are required.")
 
         if self._service is None:
             try:
+                print("[Gmail Service] Initializing Gmail API service...")
                 self._service = self.oauth_handler.get_gmail_service()
-                print("SUCCESS: Gmail API service initialized")
+                print("[Gmail Service] SUCCESS: Gmail API service initialized")
             except ValueError as e:
-                print(f"WARNING: Gmail credentials not configured: {e}")
-                print("WARNING: Using mock data instead")
-                self.use_mock = True
+                print(f"[Gmail Service] ERROR: Gmail credentials not configured: {e}")
+                raise Exception(f"Gmail credentials missing: {e}")
             except Exception as e:
-                print(f"ERROR: Failed to initialize Gmail service: {e}")
-                print("WARNING: Using mock data instead")
-                self.use_mock = True
+                print(f"[Gmail Service] ERROR: Failed to initialize Gmail service: {e}")
+                raise Exception(f"Gmail initialization failed: {e}")
 
         return self._service
 
@@ -64,8 +82,14 @@ class GmailAdapter(BaseEmailAdapter):
         query: str | None = None
     ) -> list[dict[str, Any]]:
         """Fetch email threads from Gmail"""
-        if self.use_mock or not self.service:
-            return self._get_mock_threads()
+        # FORCE REAL GMAIL - NO MOCK DATA
+        print(f"[fetch_threads] use_mock={self.use_mock}, service={self.service is not None}")
+
+        if self.use_mock:
+            raise Exception("MOCK MODE IS DISABLED - Gmail credentials required!")
+
+        if not self.service:
+            raise Exception("Gmail service not initialized - check credentials!")
 
         try:
             # Build Gmail query

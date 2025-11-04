@@ -16,52 +16,7 @@ import json
 import os
 import requests
 from ..utils.email_query import parse_email_nl_to_gmail_query
-
-
-def call_euron_api(prompt: str) -> str:
-    """
-    Call Euron API for AI reasoning.
-
-    Args:
-        prompt: The prompt to send to the AI
-
-    Returns:
-        The AI's response text
-    """
-    api_key = os.getenv("EURON_API_KEY")
-    api_base = os.getenv("EURON_API_BASE", "https://api.euron.one/api/v1/euri")
-    model = os.getenv("EURON_MODEL", "gpt-4.1-nano")
-
-    if not api_key:
-        raise ValueError("EURON_API_KEY not configured in environment")
-
-    try:
-        response = requests.post(
-            f"{api_base}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": model,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            },
-            timeout=30
-        )
-
-        response.raise_for_status()
-        data = response.json()
-
-        return data["choices"][0]["message"]["content"]
-
-    except requests.exceptions.RequestException as e:
-        print(f"[Euron API] Error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Euron API error: {str(e)}"
-        )
+from ..utils.llm_fallback import call_llm_with_fallback
 
 # Initialize router
 router = APIRouter(prefix="/voice-agent", tags=["voice-agent"])
@@ -112,51 +67,114 @@ async def process_query(request: QueryRequest):
     Process a user query through the voice agent system.
 
     This endpoint accepts natural language queries and returns:
-    - Email drafts
+    - Email analysis and answers
     - Calendar action proposals
-    - Executed actions (if authorized)
-    - Complete action logs
+    - Intelligent responses using LLM
 
     Example queries:
+    - "How many interview emails did I receive?"
     - "What's in my inbox?"
-    - "Draft a reply to John's email about the Q4 review"
-    - "Do I have any meetings tomorrow?"
-    - "Accept the board meeting invite"
+    - "Do I have any meetings this week?"
+    - "Which emails need replies?"
     """
     try:
-        if orchestrator is None:
-            # Minimal stub response when full orchestrator isn't available
-            return QueryResponse(
-                text="Stubbed voice response (orchestrator unavailable)",
-                intent="unknown",
-                drafts=[],
-                calendar_actions=[],
-                executed=[],
-                logs=[],
-                session_id=request.session_id,
-                error=None,
-            )
+        from voice_agent.adapters.email.gmail_adapter import GmailAdapter
+        from voice_agent.adapters.calendar.google_calendar_adapter import GoogleCalendarAdapter
+        from datetime import datetime, timezone, timedelta
 
-        result = await orchestrator.process_query(
-            query=request.query,
-            mode=request.mode,
-            user_id=request.user_id,
-            session_id=request.session_id,
-            authorization_code=request.authorization_code
-        )
+        query = request.query.lower()
+
+        print(f"[Query] Processing: {request.query}")
+
+        # Fetch emails for context
+        gmail = GmailAdapter()
+        threads = await gmail.fetch_threads(max_results=50)
+
+        print(f"[Query] Fetched {len(threads)} emails for analysis")
+
+        # Build email context for LLM
+        email_context = "EMAILS IN INBOX:\n\n"
+        for idx, thread in enumerate(threads[:50], 1):
+            email_context += f"Email {idx}:\n"
+            email_context += f"From: {thread.get('from', 'Unknown')}\n"
+            email_context += f"Subject: {thread.get('subject', 'No Subject')}\n"
+            email_context += f"Date: {thread.get('timestamp', 'Unknown')}\n"
+            email_context += f"Preview: {thread.get('preview', '')[:200]}\n"
+            email_context += f"Unread: {thread.get('unread', False)}\n\n"
+
+        # Fetch calendar events if query mentions meetings/calendar
+        calendar_context = ""
+        if any(word in query for word in ['meeting', 'calendar', 'schedule', 'interview', 'call']):
+            try:
+                calendar = GoogleCalendarAdapter()
+                now = datetime.now(timezone.utc)
+                start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                end = start + timedelta(days=7)
+                events = await calendar.get_events(start_time=start, end_time=end)
+
+                if events:
+                    calendar_context = "\n\nCALENDAR EVENTS THIS WEEK:\n"
+                    for event in events[:10]:
+                        calendar_context += f"- {event.get('title', 'Untitled')}: {event.get('start', 'No date')}\n"
+
+                print(f"[Query] Fetched {len(events)} calendar events")
+            except Exception as cal_error:
+                print(f"[Query] Calendar fetch warning: {cal_error}")
+
+        # Create prompt for LLM to answer the query
+        prompt = f"""USER QUESTION: {request.query}
+
+{email_context}{calendar_context}
+
+TASK: Answer the user's question based on the emails and calendar events above.
+
+For questions about:
+- Email counts: Count and categorize emails (e.g., "You received 5 interview emails")
+- Specific topics: Search email subjects and content for keywords
+- Meetings: List upcoming calendar events
+- Action items: Identify emails that need replies or attention
+
+Provide a direct, conversational answer in 2-4 sentences. Include specific numbers and details.
+
+ANSWER:"""
+
+        # Use LLM to answer the query
+        print("[Query] Calling LLM to answer question...")
+        answer = call_llm_with_fallback(prompt, max_tokens=500, temperature=0.3)
+
+        # Determine intent based on query keywords
+        intent = "unknown"
+        if any(word in query for word in ['interview', 'job', 'application']):
+            intent = "job_search"
+        elif any(word in query for word in ['meeting', 'calendar', 'schedule']):
+            intent = "calendar_check"
+        elif any(word in query for word in ['reply', 'respond', 'answer']):
+            intent = "email_reply"
+        elif any(word in query for word in ['inbox', 'email', 'unread']):
+            intent = "inbox_check"
+
+        print(f"[Query] Answer generated. Intent: {intent}")
 
         return QueryResponse(
-            text=result.get("text", ""),
-            intent=result.get("intent", "unknown"),
-            drafts=result.get("drafts", []),
-            calendar_actions=result.get("calendar_actions", []),
-            executed=result.get("executed", []),
-            logs=result.get("logs", []),
+            text=answer.strip(),
+            intent=intent,
+            drafts=[],
+            calendar_actions=[],
+            executed=[],
+            logs=[{
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "action": "query_processed",
+                "query": request.query,
+                "emails_analyzed": len(threads)
+            }],
             session_id=request.session_id,
-            error=result.get("error")
+            error=None
         )
 
     except Exception as e:
+        print(f"[Query] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -291,6 +309,48 @@ async def search_emails(nl: str, max_results: int = 25, unread_only: bool = Fals
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/test-gmail")
+async def test_gmail():
+    """Test Gmail adapter initialization"""
+    import sys
+    import os
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    load_dotenv(override=True)
+
+    result = {
+        "env_vars": {
+            "GMAIL_CLIENT_ID": os.getenv("GMAIL_CLIENT_ID", "NOT SET")[:30],
+            "GMAIL_CLIENT_SECRET": "SET" if os.getenv("GMAIL_CLIENT_SECRET") else "NOT SET",
+            "GMAIL_REFRESH_TOKEN": "SET" if os.getenv("GMAIL_REFRESH_TOKEN") else "NOT SET",
+            "EMAIL_MOCK_MODE": os.getenv("EMAIL_MOCK_MODE", "false")
+        }
+    }
+
+    try:
+        from voice_agent.adapters.email.gmail_adapter import GmailAdapter
+        gmail = GmailAdapter()
+        result["adapter_created"] = "YES"
+        result["use_mock"] = gmail.use_mock
+
+        # Try to get service
+        service = gmail.service
+        result["service"] = "INITIALIZED" if service else "NONE"
+
+        # Try to fetch 1 email
+        threads = await gmail.fetch_threads(max_results=1)
+        result["threads_fetched"] = len(threads)
+        if threads:
+            result["first_email_from"] = threads[0].get("from", "Unknown")
+
+    except Exception as e:
+        result["error"] = str(e)
+        import traceback
+        result["traceback"] = traceback.format_exc()
+
+    return result
 
 @router.get("/emails")
 async def get_emails(max_results: int = 10, query: str | None = None, unread_only: bool = False):
@@ -570,12 +630,12 @@ class DraftReplyRequest(BaseModel):
 @router.post("/draft-reply")
 async def generate_draft_reply(request: DraftReplyRequest):
     """
-    Generate an AI draft reply for a given email using Euron API.
+    Generate an AI draft reply for a given email using LLM fallback chain.
 
-    Uses the Euron API to create a contextual, professional response.
+    Tries: Euron → DeepSeek → Google Gemini → OpenAI
     """
     try:
-        # Use Euron API to generate intelligent draft
+        # Use LLM fallback chain to generate intelligent draft
         prompt = f"""Generate a professional email reply for the following email:
 
 From: {request.email_from}
@@ -585,8 +645,8 @@ Body: {request.email_body}
 Generate a brief, professional reply (2-4 sentences). Be polite and helpful.
 Only return the email body text, no greetings or signatures needed."""
 
-        # Call Euron API for AI-powered draft generation
-        draft_text = call_euron_api(prompt)
+        # Call LLM with automatic fallback
+        draft_text = call_llm_with_fallback(prompt, max_tokens=300, temperature=0.7)
 
         return {
             "success": True,
@@ -596,7 +656,7 @@ Only return the email body text, no greetings or signatures needed."""
 
     except Exception as e:
         print(f"[Draft Reply] Error: {e}")
-        # Fallback to simple response if Euron API fails
+        # Fallback to simple response if all LLM providers fail
         fallback_text = f"""Thank you for your email regarding "{request.email_subject}".
 
 I have reviewed your message and will get back to you shortly with a detailed response. If you have any urgent concerns, please let me know.
@@ -607,7 +667,8 @@ Best regards"""
             "success": True,
             "draft_text": fallback_text,
             "email_id": request.email_id,
-            "fallback": True
+            "fallback": True,
+            "error": str(e)
         }
 
 
@@ -675,6 +736,219 @@ async def mark_email_as_read(email_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Mark as read error: {str(e)}")
+
+
+@router.get("/emails/summarize")
+async def summarize_emails(max_results: int = 30, unread_only: bool = False):
+    """
+    Generate AI-powered summary of emails with key action items for the day.
+
+    Analyzes recent emails and extracts:
+    - Urgent action items
+    - Upcoming deadlines
+    - Meeting invitations
+    - Important decisions needed
+    - Follow-ups required
+    - Emails needing replies
+    - Conversation threads (2+ messages)
+    - Interviews/meetings this week
+
+    Returns structured summary with priorities and reasoning.
+    """
+    try:
+        from voice_agent.adapters.email.gmail_adapter import GmailAdapter
+        from voice_agent.adapters.calendar.google_calendar_adapter import GoogleCalendarAdapter
+        from datetime import datetime, timezone, timedelta
+        import re
+
+        print(f"[Email Summarization] Starting analysis of {max_results} emails...")
+
+        # Fetch recent emails
+        gmail = GmailAdapter()
+        threads = await gmail.fetch_threads(
+            max_results=max_results,
+            unread_only=unread_only
+        )
+
+        if not threads:
+            return {
+                "success": True,
+                "summary": "No emails to summarize.",
+                "urgent_actions": [],
+                "deadlines": [],
+                "meetings": [],
+                "emails_needing_reply": 0,
+                "conversation_threads": 0,
+                "urgent_count": 0,
+                "total_analyzed": 0
+            }
+
+        print(f"[Email Summarization] Analyzing {len(threads)} emails...")
+
+        # Analyze thread patterns for reasoning
+        emails_needing_reply = 0
+        conversation_threads = 0
+        thread_senders = {}
+
+        for thread in threads:
+            # Count threads with multiple messages (conversation threads)
+            message_count = thread.get('message_count', 1)
+            if message_count >= 2:
+                conversation_threads += 1
+
+            # Check if email needs reply (simplified: unread emails from others likely need reply)
+            # In production, you'd check if the last message in thread was from you or someone else
+            if thread.get('unread', False):
+                emails_needing_reply += 1
+
+            # Track senders for calendar linking
+            sender_email = thread.get('from', '')
+            sender_match = re.search(r'<(.+?)>', sender_email)
+            if sender_match:
+                sender_email = sender_match.group(1)
+            thread_senders[sender_email] = thread
+
+        # Fetch calendar events for the week
+        calendar_events = []
+        interviews_meetings_count = 0
+        try:
+            calendar = GoogleCalendarAdapter()
+            now = datetime.now(timezone.utc)
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end = start + timedelta(days=7)
+
+            calendar_events = await calendar.get_events(start_time=start, end_time=end)
+
+            # Count interviews and meetings
+            for event in calendar_events:
+                title = event.get('title', '').lower()
+                if any(keyword in title for keyword in ['interview', 'meeting', 'call', 'sync', 'standup', 'discussion']):
+                    interviews_meetings_count += 1
+
+            print(f"[Email Summarization] Found {interviews_meetings_count} meetings/interviews this week")
+        except Exception as cal_error:
+            print(f"[Email Summarization] Calendar fetch warning: {cal_error}")
+
+        # Link calendar events with emails from same sender
+        calendar_email_links = []
+        for event in calendar_events:
+            organizer = event.get('organizer', '')
+            if organizer in thread_senders:
+                calendar_email_links.append({
+                    "event_title": event.get('title', 'Untitled Event'),
+                    "event_start": event.get('start', ''),
+                    "related_email_subject": thread_senders[organizer].get('subject', ''),
+                    "sender": organizer
+                })
+
+        # Build comprehensive email context for LLM
+        email_context = "EMAILS TO ANALYZE:\n\n"
+        for idx, thread in enumerate(threads[:max_results], 1):
+            message_count = thread.get('message_count', 1)
+            email_context += f"Email {idx}:\n"
+            email_context += f"From: {thread.get('from', 'Unknown')}\n"
+            email_context += f"Subject: {thread.get('subject', 'No Subject')}\n"
+            email_context += f"Date: {thread.get('timestamp', 'Unknown')}\n"
+            email_context += f"Messages in thread: {message_count}\n"
+            email_context += f"Preview: {thread.get('preview', '')[:300]}\n"
+            email_context += f"Unread: {thread.get('unread', False)}\n\n"
+
+        # Add calendar context
+        calendar_context = ""
+        if calendar_events:
+            calendar_context = f"\n\nCALENDAR EVENTS THIS WEEK:\n"
+            for event in calendar_events[:10]:  # Top 10 events
+                calendar_context += f"- {event.get('title', 'Untitled')}: {event.get('start', 'No date')}\n"
+
+        # Create enhanced prompt for LLM analysis with reasoning
+        prompt = f"""{email_context}{calendar_context}
+
+CONTEXT:
+- Total emails analyzed: {len(threads)}
+- Emails likely needing reply: {emails_needing_reply}
+- Conversation threads (2+ messages): {conversation_threads}
+- Meetings/Interviews this week: {interviews_meetings_count}
+
+TASK: Analyze these emails and calendar events, then provide a structured summary with reasoning. Extract:
+
+1. URGENT ACTION ITEMS (things requiring immediate attention today)
+2. DEADLINES (with dates if mentioned)
+3. MEETING INVITATIONS from emails (with time/date if mentioned)
+4. IMPORTANT DECISIONS NEEDED
+5. FOLLOW-UPS REQUIRED
+6. REASONING: Explain key patterns (e.g., "5 emails need replies", "3 ongoing conversations", "2 interviews scheduled this week")
+
+Format your response as JSON with these keys:
+{{
+  "urgent_actions": ["action 1", "action 2"],
+  "deadlines": ["deadline 1 - Date", "deadline 2 - Date"],
+  "meetings": ["meeting 1 - Time/Date", "meeting 2 - Time/Date"],
+  "decisions": ["decision 1", "decision 2"],
+  "followups": ["followup 1", "followup 2"],
+  "summary": "Brief 2-3 sentence overview of your inbox and calendar for the week with key numbers",
+  "reasoning": "Detailed reasoning about email patterns, reply needs, and meeting schedule"
+}}
+
+Only include items that are actually present in the emails. If a category has no items, use an empty array."""
+
+        # Use LLM fallback chain for analysis
+        print("[Email Summarization] Calling LLM for analysis...")
+        analysis_text = call_llm_with_fallback(prompt, max_tokens=1500, temperature=0.3)
+
+        # Try to parse JSON response
+        try:
+            import json
+            # Clean up response (remove markdown code blocks if present)
+            clean_text = analysis_text.strip()
+            if clean_text.startswith("```"):
+                # Remove markdown code blocks
+                clean_text = clean_text.split("```")[1]
+                if clean_text.startswith("json"):
+                    clean_text = clean_text[4:]
+            clean_text = clean_text.strip()
+
+            analysis = json.loads(clean_text)
+        except Exception as parse_error:
+            print(f"[Email Summarization] JSON parse error: {parse_error}")
+            # Fallback to simple text summary
+            analysis = {
+                "urgent_actions": [],
+                "deadlines": [],
+                "meetings": [],
+                "decisions": [],
+                "followups": [],
+                "summary": analysis_text[:500],
+                "reasoning": "Could not parse detailed reasoning."
+            }
+
+        # Count urgent emails
+        urgent_count = sum(1 for t in threads if t.get('unread', False))
+
+        print(f"[Email Summarization] Analysis complete. Found {len(analysis.get('urgent_actions', []))} action items")
+
+        return {
+            "success": True,
+            "summary": analysis.get("summary", "Analysis complete."),
+            "reasoning": analysis.get("reasoning", ""),
+            "urgent_actions": analysis.get("urgent_actions", []),
+            "deadlines": analysis.get("deadlines", []),
+            "meetings": analysis.get("meetings", []),
+            "decisions": analysis.get("decisions", []),
+            "followups": analysis.get("followups", []),
+            "emails_needing_reply": emails_needing_reply,
+            "conversation_threads": conversation_threads,
+            "interviews_meetings_count": interviews_meetings_count,
+            "calendar_email_links": calendar_email_links,
+            "urgent_count": urgent_count,
+            "total_analyzed": len(threads),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+    except Exception as e:
+        print(f"[Email Summarization] Error: {e}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Email summarization error: {str(e)}")
 
 
 @router.get("/calendar")

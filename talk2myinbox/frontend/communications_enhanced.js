@@ -1471,9 +1471,9 @@ function showInboxOverviewModal(overview) {
                     ×
                 </button>
             </div>
-            <div class="text-gray-800 whitespace-pre-wrap mb-4">${escapeHtml(overview)}</div>
+            <div class="text-gray-800 whitespace-pre-wrap mb-4" id="overview-text">${escapeHtml(overview)}</div>
             <div class="flex gap-2">
-                <button onclick="speakText('${escapeHtml(overview).replace(/'/g, '\\'')}')"
+                <button onclick="speakOverviewText()"
                         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded font-semibold">
                     🔊 Speak
                 </button>
@@ -1486,6 +1486,12 @@ function showInboxOverviewModal(overview) {
     `;
 
     document.body.appendChild(modal);
+
+    // Add speak function
+    window.speakOverviewText = function() {
+        const text = document.getElementById('overview-text').textContent;
+        speakText(text);
+    };
 }
 
 /**
@@ -1528,6 +1534,170 @@ async function blockCalendarTime(title, startTime, duration = 60) {
     } catch (error) {
         console.error('[Calendar] Error blocking time:', error);
         showNotification('Failed to block calendar time', 'error');
+    }
+}
+
+/**
+ * Load Day Summarization with AI reasoning
+ */
+async function loadDaySummary() {
+    console.log('[DaySummary] Loading email summary...');
+    const summaryContent = document.getElementById('day-summary-content');
+
+    // Show loading state
+    summaryContent.innerHTML = `
+        <div class="text-center text-gray-500 py-3">
+            <div class="text-sm">Loading summary...</div>
+            <div class="text-xs mt-1">Analyzing your inbox</div>
+        </div>
+    `;
+
+    try {
+        const url = new URL(`${COMM_API}/voice-agent/emails/summarize`);
+        url.searchParams.set('max_results', '50'); // Analyze 50 emails
+
+        console.log('[DaySummary] Fetching from:', url.toString());
+
+        const response = await fetch(url.toString());
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('[DaySummary] Received data:', data);
+
+        // Build summary HTML
+        let summaryHTML = '';
+
+        // Main summary text
+        if (data.summary) {
+            summaryHTML += `
+                <div class="bg-white rounded p-2 mb-2 text-xs text-gray-800 border border-indigo-100">
+                    <div class="font-semibold text-indigo-900 mb-1">📝 Overview</div>
+                    <div class="whitespace-pre-wrap">${escapeHtml(data.summary)}</div>
+                </div>
+            `;
+        }
+
+        // Key stats
+        summaryHTML += `
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="bg-blue-50 rounded p-2 text-center border border-blue-200">
+                    <div class="text-lg font-bold text-blue-700">${data.total_analyzed || 0}</div>
+                    <div class="text-xs text-blue-600">Emails Analyzed</div>
+                </div>
+                <div class="bg-red-50 rounded p-2 text-center border border-red-200">
+                    <div class="text-lg font-bold text-red-700">${data.urgent_count || 0}</div>
+                    <div class="text-xs text-red-600">Urgent Items</div>
+                </div>
+                <div class="bg-purple-50 rounded p-2 text-center border border-purple-200">
+                    <div class="text-lg font-bold text-purple-700">${data.emails_needing_reply || 0}</div>
+                    <div class="text-xs text-purple-600">Need Reply</div>
+                </div>
+                <div class="bg-green-50 rounded p-2 text-center border border-green-200">
+                    <div class="text-lg font-bold text-green-700">${data.conversation_threads || 0}</div>
+                    <div class="text-xs text-green-600">Conversations</div>
+                </div>
+            </div>
+        `;
+
+        // Urgent actions
+        if (data.urgent_actions && data.urgent_actions.length > 0) {
+            summaryHTML += `
+                <div class="bg-red-50 rounded p-2 mb-2 border border-red-200">
+                    <div class="font-semibold text-red-900 text-xs mb-1">🚨 Urgent Actions</div>
+                    <div class="space-y-1">
+                        ${data.urgent_actions.slice(0, 3).map(action => `
+                            <div class="text-xs text-red-800">• ${escapeHtml(action)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Meetings/Interviews
+        if (data.meetings && data.meetings.length > 0) {
+            summaryHTML += `
+                <div class="bg-indigo-50 rounded p-2 mb-2 border border-indigo-200">
+                    <div class="font-semibold text-indigo-900 text-xs mb-1">📅 Meetings</div>
+                    <div class="space-y-1">
+                        ${data.meetings.slice(0, 3).map(meeting => `
+                            <div class="text-xs text-indigo-800">• ${escapeHtml(meeting)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Deadlines
+        if (data.deadlines && data.deadlines.length > 0) {
+            summaryHTML += `
+                <div class="bg-orange-50 rounded p-2 mb-2 border border-orange-200">
+                    <div class="font-semibold text-orange-900 text-xs mb-1">⏰ Deadlines</div>
+                    <div class="space-y-1">
+                        ${data.deadlines.slice(0, 3).map(deadline => `
+                            <div class="text-xs text-orange-800">• ${escapeHtml(deadline)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Decisions needed
+        if (data.decisions && data.decisions.length > 0) {
+            summaryHTML += `
+                <div class="bg-yellow-50 rounded p-2 mb-2 border border-yellow-200">
+                    <div class="font-semibold text-yellow-900 text-xs mb-1">🤔 Decisions Needed</div>
+                    <div class="space-y-1">
+                        ${data.decisions.slice(0, 3).map(decision => `
+                            <div class="text-xs text-yellow-800">• ${escapeHtml(decision)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Follow-ups
+        if (data.followups && data.followups.length > 0) {
+            summaryHTML += `
+                <div class="bg-teal-50 rounded p-2 border border-teal-200">
+                    <div class="font-semibold text-teal-900 text-xs mb-1">🔄 Follow-ups</div>
+                    <div class="space-y-1">
+                        ${data.followups.slice(0, 3).map(followup => `
+                            <div class="text-xs text-teal-800">• ${escapeHtml(followup)}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // If no data at all
+        if (!summaryHTML) {
+            summaryHTML = `
+                <div class="text-center text-gray-500 py-3">
+                    <div class="text-sm">No summary available</div>
+                    <div class="text-xs mt-1">Try refreshing</div>
+                </div>
+            `;
+        }
+
+        summaryContent.innerHTML = summaryHTML;
+        console.log('[DaySummary] ✓ Summary loaded successfully');
+
+    } catch (error) {
+        console.error('[DaySummary] ✗ Error loading summary:', error);
+        summaryContent.innerHTML = `
+            <div class="text-center text-red-600 py-3">
+                <div class="text-sm font-semibold">⚠️ Error Loading Summary</div>
+                <div class="text-xs mt-1">${escapeHtml(error.message)}</div>
+                <button onclick="loadDaySummary()"
+                        class="mt-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded font-semibold">
+                    🔄 Retry
+                </button>
+            </div>
+        `;
+        showNotification('Failed to load day summary: ' + error.message, 'error');
     }
 }
 
