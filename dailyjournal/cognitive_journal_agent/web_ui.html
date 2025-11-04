@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Journal Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .entry-item {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        .tab-active {
+            border-bottom-width: 2px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="text-3xl">🧠</div>
+                    <div>
+                        <h1 class="text-3xl font-bold">Cognitive Journal Agent</h1>
+                        <p class="text-sm opacity-90">Your AI-powered personal assistant</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="pulse-dot inline-block w-2 h-2 bg-green-400 rounded-full"></span>
+                    <span class="text-sm">Connected</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column: Create Entry -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Create Entry Card -->
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">📝 Create Journal Entry</h2>
+
+                    <!-- Tab Navigation -->
+                    <div class="flex space-x-2 mb-4 border-b border-gray-200">
+                        <button onclick="switchTab('text')" id="tabText" class="tab-button tab-active px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600">
+                            ✍️ Text
+                        </button>
+                        <button onclick="switchTab('voice')" id="tabVoice" class="tab-button px-4 py-2 font-medium text-gray-600 border-b-2 border-transparent hover:text-purple-600">
+                            🎤 Voice
+                        </button>
+                        <button onclick="switchTab('image')" id="tabImage" class="tab-button px-4 py-2 font-medium text-gray-600 border-b-2 border-transparent hover:text-purple-600">
+                            📷 Image
+                        </button>
+                        <button onclick="switchTab('pdf')" id="tabPdf" class="tab-button px-4 py-2 font-medium text-gray-600 border-b-2 border-transparent hover:text-purple-600">
+                            📄 PDF
+                        </button>
+                        <button onclick="switchTab('code')" id="tabCode" class="tab-button px-4 py-2 font-medium text-gray-600 border-b-2 border-transparent hover:text-purple-600">
+                            💻 Code
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Text Entry Tab -->
+                        <div id="contentText" class="tab-content">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">What's on your mind?</label>
+                            <textarea
+                                id="journalInput"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                rows="4"
+                                placeholder="Type your thoughts, tasks, or notes...&#10;&#10;Examples:&#10;• &quot;Had a great meeting with the team today&quot;&#10;• &quot;Need to finish the project report by Friday&quot;&#10;• &quot;Feeling productive and energized!&quot;"
+                            ></textarea>
+                            <button
+                                onclick="createEntry()"
+                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2"
+                            >
+                                <span>✍️</span>
+                                <span>Add Text Entry</span>
+                            </button>
+                        </div>
+
+                        <!-- Voice Entry Tab -->
+                        <div id="contentVoice" class="tab-content hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Voice Memo</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition">
+                                <input type="file" id="voiceInput" accept="audio/*,.mp3,.wav,.m4a,.ogg" class="hidden" onchange="handleFileSelect('voice')">
+                                <div id="voiceDropZone" onclick="document.getElementById('voiceInput').click()" class="cursor-pointer">
+                                    <div class="text-5xl mb-3">🎤</div>
+                                    <p class="text-gray-600 mb-2">Click to upload voice memo</p>
+                                    <p class="text-sm text-gray-500">Supports: MP3, WAV, M4A, OGG</p>
+                                    <p id="voiceFileName" class="mt-2 text-sm font-medium text-purple-600"></p>
+                                </div>
+                            </div>
+                            <button
+                                onclick="uploadFile('voice')"
+                                id="voiceUploadBtn"
+                                disabled
+                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span>🎤</span>
+                                <span>Upload Voice Memo</span>
+                            </button>
+                        </div>
+
+                        <!-- Image Entry Tab -->
+                        <div id="contentImage" class="tab-content hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image (OCR)</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition">
+                                <input type="file" id="imageInput" accept="image/*,.jpg,.jpeg,.png,.gif,.bmp" class="hidden" onchange="handleFileSelect('image')">
+                                <div id="imageDropZone" onclick="document.getElementById('imageInput').click()" class="cursor-pointer">
+                                    <div class="text-5xl mb-3">📷</div>
+                                    <p class="text-gray-600 mb-2">Click to upload image for OCR</p>
+                                    <p class="text-sm text-gray-500">Supports: JPG, PNG, GIF, BMP</p>
+                                    <p id="imageFileName" class="mt-2 text-sm font-medium text-purple-600"></p>
+                                </div>
+                            </div>
+                            <div id="imagePreview" class="mt-3 hidden">
+                                <img id="imagePreviewImg" src="" alt="Preview" class="max-w-full max-h-48 mx-auto rounded-lg border border-gray-300">
+                            </div>
+                            <button
+                                onclick="uploadFile('image')"
+                                id="imageUploadBtn"
+                                disabled
+                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span>📷</span>
+                                <span>Upload & Process Image</span>
+                            </button>
+                        </div>
+
+                        <!-- PDF Entry Tab -->
+                        <div id="contentPdf" class="tab-content hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload PDF Document</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition">
+                                <input type="file" id="pdfInput" accept=".pdf,application/pdf" class="hidden" onchange="handleFileSelect('pdf')">
+                                <div id="pdfDropZone" onclick="document.getElementById('pdfInput').click()" class="cursor-pointer">
+                                    <div class="text-5xl mb-3">📄</div>
+                                    <p class="text-gray-600 mb-2">Click to upload PDF document</p>
+                                    <p class="text-sm text-gray-500">Supports: PDF files</p>
+                                    <p id="pdfFileName" class="mt-2 text-sm font-medium text-purple-600"></p>
+                                </div>
+                            </div>
+                            <button
+                                onclick="uploadFile('pdf')"
+                                id="pdfUploadBtn"
+                                disabled
+                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span>📄</span>
+                                <span>Upload & Process PDF</span>
+                            </button>
+                        </div>
+
+                        <!-- Code Entry Tab -->
+                        <div id="contentCode" class="tab-content hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Code Snippet</label>
+                            <select id="codeLanguage" class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-purple-500">
+                                <option value="python">Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="typescript">TypeScript</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="csharp">C#</option>
+                                <option value="go">Go</option>
+                                <option value="rust">Rust</option>
+                                <option value="sql">SQL</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <textarea
+                                id="codeInput"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none font-mono text-sm"
+                                rows="8"
+                                placeholder="Paste your code snippet here...&#10;&#10;def hello_world():&#10;    print('Hello, World!')&#10;&#10;The system will analyze and store your code."
+                            ></textarea>
+                            <button
+                                onclick="createCodeEntry()"
+                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2"
+                            >
+                                <span>💻</span>
+                                <span>Add Code Snippet</span>
+                            </button>
+                        </div>
+
+                        <!-- Generate Summary Button (shown on all tabs) -->
+                        <div class="pt-3 border-t border-gray-200">
+                            <button
+                                onclick="generateSummary()"
+                                class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 transition duration-200 flex items-center justify-center space-x-2"
+                            >
+                                <span>📊</span>
+                                <span>Generate Daily Summary</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Response Area -->
+                    <div id="responseArea" class="mt-4 hidden">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <p id="responseText" class="text-green-800"></p>
+                        </div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="mt-4 hidden flex items-center justify-center space-x-3">
+                        <div class="loading-spinner"></div>
+                        <span class="text-gray-600">Processing...</span>
+                    </div>
+                </div>
+
+                <!-- Summary Display -->
+                <div id="summaryDisplay" class="bg-white rounded-lg shadow-lg p-6 card-hover hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 Daily Summary</h2>
+                    <div id="summaryContent" class="space-y-4 text-gray-700">
+                        <!-- Summary content will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Recent Entries -->
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">📚 Recent Entries</h2>
+                        <button
+                            onclick="loadEntries()"
+                            class="text-purple-600 hover:text-purple-800 font-medium text-sm"
+                        >
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    <div id="entriesList" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Entries will be loaded here -->
+                        <div class="text-center text-gray-500 py-8">
+                            No entries yet. Start by creating your first journal entry!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Action Items & Stats -->
+            <div class="space-y-6">
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Quick Stats</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                            <span class="text-gray-700">Total Entries</span>
+                            <span id="statsEntries" class="text-2xl font-bold text-purple-600">0</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                            <span class="text-gray-700">Action Items</span>
+                            <span id="statsActions" class="text-2xl font-bold text-blue-600">0</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <span class="text-gray-700">Today's Entries</span>
+                            <span id="statsToday" class="text-2xl font-bold text-green-600">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Items -->
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">✅ Action Items</h3>
+                        <button
+                            onclick="loadActions()"
+                            class="text-purple-600 hover:text-purple-800 font-medium text-sm"
+                        >
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    <div id="actionsList" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Action items will be loaded here -->
+                        <div class="text-center text-gray-500 py-8 text-sm">
+                            No pending actions
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shadow-lg p-6 text-white">
+                    <h3 class="text-xl font-bold mb-4">⚡ Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button
+                            onclick="quickEntry('Daily standup completed. Discussed project progress.')"
+                            class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-left transition duration-200"
+                        >
+                            <div class="font-semibold">Daily Standup</div>
+                            <div class="text-sm opacity-90">Log standup notes</div>
+                        </button>
+                        <button
+                            onclick="quickEntry('Feeling productive and energized today!')"
+                            class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-left transition duration-200"
+                        >
+                            <div class="font-semibold">Mood Check-in</div>
+                            <div class="text-sm opacity-90">Record how you're feeling</div>
+                        </button>
+                        <button
+                            onclick="quickEntry('Great idea: ')"
+                            class="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-left transition duration-200"
+                        >
+                            <div class="font-semibold">Capture Idea</div>
+                            <div class="text-sm opacity-90">Save a quick thought</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between text-sm text-gray-600">
+                <p>© 2025 Cognitive Journal Agent. Powered by AI.</p>
+                <div class="flex items-center space-x-4">
+                    <span>API: <span id="apiStatus" class="text-green-600 font-semibold">Active</span></span>
+                    <span>•</span>
+                    <span>Storage: <span class="text-green-600 font-semibold">Connected</span></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE = 'http://localhost:7000';
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadEntries();
+            loadActions();
+            checkAPIStatus();
+        });
+
+        // Check API status
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    document.getElementById('apiStatus').textContent = 'Active';
+                    document.getElementById('apiStatus').className = 'text-green-600 font-semibold';
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = 'Offline';
+                document.getElementById('apiStatus').className = 'text-red-600 font-semibold';
+                showNotification('API server is not running. Start it with: python main.py api', 'error');
+            }
+        }
+
+        // Create journal entry
+        async function createEntry() {
+            const input = document.getElementById('journalInput');
+            const userInput = input.value.trim();
+
+            if (!userInput) {
+                showNotification('Please enter some text', 'error');
+                return;
+            }
+
+            showLoading(true);
+            hideResponse();
+
+            try {
+                const response = await fetch(`${API_BASE}/journal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_input: userInput
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    input.value = '';
+                    showNotification('✅ Journal entry created successfully!', 'success');
+
+                    // Show details if available
+                    if (data.data && data.data.tags) {
+                        showResponse(`Tags: ${data.data.tags.join(', ')}`);
+                    }
+
+                    // Reload entries and stats
+                    setTimeout(() => {
+                        loadEntries();
+                        loadActions();
+                    }, 500);
+                } else {
+                    showNotification('Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error connecting to API: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Generate summary
+        async function generateSummary() {
+            showLoading(true);
+            document.getElementById('summaryDisplay').classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.report) {
+                    displaySummary(data.report);
+                    showNotification('Summary generated successfully!', 'success');
+                } else {
+                    showNotification('Could not generate summary', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display summary
+        function displaySummary(report) {
+            const summaryDisplay = document.getElementById('summaryDisplay');
+            const summaryContent = document.getElementById('summaryContent');
+
+            let html = '';
+
+            if (report.summary) {
+                html += `
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <h3 class="font-bold text-lg mb-2">📅 ${report.summary.date}</h3>
+                        <p class="text-gray-600">Total Entries: <span class="font-semibold">${report.summary.total_entries}</span></p>
+                    </div>
+                `;
+
+                if (report.summary.key_themes && report.summary.key_themes.length > 0) {
+                    html += `
+                        <div>
+                            <h4 class="font-semibold mb-2">🏷️ Key Themes</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${report.summary.key_themes.map(theme =>
+                                    `<span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">${theme}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (report.summary.emotion_overview) {
+                    html += `
+                        <div>
+                            <h4 class="font-semibold mb-2">😊 Emotion Overview</h4>
+                            <div class="space-y-1">
+                                ${Object.entries(report.summary.emotion_overview).map(([emotion, count]) =>
+                                    `<div class="flex items-center justify-between">
+                                        <span class="capitalize">${emotion}</span>
+                                        <span class="font-semibold">${count}</span>
+                                    </div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (report.summary.notable_insights) {
+                    html += `
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold mb-2">💡 Insights</h4>
+                            <p class="text-gray-700">${report.summary.notable_insights}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            if (report.pending_actions && report.pending_actions.length > 0) {
+                html += `
+                    <div>
+                        <h4 class="font-semibold mb-2">✅ Pending Actions (${report.pending_actions.length})</h4>
+                        <ul class="space-y-2">
+                            ${report.pending_actions.map(action =>
+                                `<li class="flex items-start space-x-2">
+                                    <span class="text-purple-600">•</span>
+                                    <span>${action.task_description}</span>
+                                </li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (report.suggested_first_task) {
+                html += `
+                    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg p-4">
+                        <h4 class="font-semibold mb-2">🎯 Suggested First Task</h4>
+                        <p>${report.suggested_first_task}</p>
+                    </div>
+                `;
+            }
+
+            summaryContent.innerHTML = html;
+            summaryDisplay.classList.remove('hidden');
+            summaryDisplay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Load entries
+        async function loadEntries() {
+            try {
+                const response = await fetch(`${API_BASE}/entries`);
+                const data = await response.json();
+
+                const entriesList = document.getElementById('entriesList');
+
+                if (data.success && data.entries && data.entries.length > 0) {
+                    // Sort by timestamp descending
+                    const entries = data.entries.sort((a, b) =>
+                        new Date(b.timestamp) - new Date(a.timestamp)
+                    );
+
+                    entriesList.innerHTML = entries.slice(0, 10).map(entry => {
+                        const date = new Date(entry.timestamp);
+                        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                        return `
+                            <div class="entry-item border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition">
+                                <div class="flex items-start justify-between mb-2">
+                                    <span class="text-xs text-gray-500">${dateStr} • ${timeStr}</span>
+                                    <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">${entry.input_type || 'text_note'}</span>
+                                </div>
+                                <p class="text-gray-800 mb-2">${entry.raw_content.substring(0, 150)}${entry.raw_content.length > 150 ? '...' : ''}</p>
+                                ${entry.contextual_tags && entry.contextual_tags.length > 0 ? `
+                                    <div class="flex flex-wrap gap-1">
+                                        ${entry.contextual_tags.map(tag =>
+                                            `<span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">${tag}</span>`
+                                        ).join('')}
+                                    </div>
+                                ` : ''}
+                                ${entry.inferred_emotion ? `
+                                    <div class="mt-2 text-xs text-gray-600">
+                                        😊 ${entry.inferred_emotion}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Update stats
+                    document.getElementById('statsEntries').textContent = data.count;
+
+                    // Count today's entries
+                    const today = new Date().toDateString();
+                    const todayCount = entries.filter(e =>
+                        new Date(e.timestamp).toDateString() === today
+                    ).length;
+                    document.getElementById('statsToday').textContent = todayCount;
+                } else {
+                    entriesList.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            No entries yet. Start by creating your first journal entry!
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading entries:', error);
+            }
+        }
+
+        // Load action items
+        async function loadActions() {
+            try {
+                const response = await fetch(`${API_BASE}/actions`);
+                const data = await response.json();
+
+                const actionsList = document.getElementById('actionsList');
+
+                if (data.success && data.actions && data.actions.length > 0) {
+                    actionsList.innerHTML = data.actions.map(action => `
+                        <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition">
+                            <div class="flex items-start justify-between">
+                                <p class="text-sm text-gray-800 flex-1">${action.task_description}</p>
+                                <span class="text-xs bg-${getPriorityColor(action.priority)}-100 text-${getPriorityColor(action.priority)}-700 px-2 py-1 rounded ml-2">${action.priority}</span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Update stats
+                    document.getElementById('statsActions').textContent = data.count;
+                } else {
+                    actionsList.innerHTML = `
+                        <div class="text-center text-gray-500 py-8 text-sm">
+                            No pending actions
+                        </div>
+                    `;
+                    document.getElementById('statsActions').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading actions:', error);
+            }
+        }
+
+        // Helper: Get priority color
+        function getPriorityColor(priority) {
+            const colors = {
+                'P1': 'red',
+                'P2': 'yellow',
+                'P3': 'green',
+                'high': 'red',
+                'medium': 'yellow',
+                'low': 'green'
+            };
+            return colors[priority] || 'gray';
+        }
+
+        // Quick entry
+        function quickEntry(text) {
+            document.getElementById('journalInput').value = text;
+            document.getElementById('journalInput').focus();
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            const loader = document.getElementById('loadingIndicator');
+            if (show) {
+                loader.classList.remove('hidden');
+            } else {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Show/hide response
+        function showResponse(text) {
+            const responseArea = document.getElementById('responseArea');
+            const responseText = document.getElementById('responseText');
+            responseText.textContent = text;
+            responseArea.classList.remove('hidden');
+            setTimeout(() => responseArea.classList.add('hidden'), 5000);
+        }
+
+        function hideResponse() {
+            document.getElementById('responseArea').classList.add('hidden');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Simple alert for now - could be enhanced with a toast notification system
+            if (type === 'error') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.add('hidden'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => {
+                tab.classList.remove('tab-active', 'text-purple-600', 'border-purple-600');
+                tab.classList.add('text-gray-600', 'border-transparent');
+            });
+
+            // Show selected tab content
+            document.getElementById('content' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
+
+            // Add active class to selected tab
+            const activeTab = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            activeTab.classList.add('tab-active', 'text-purple-600', 'border-purple-600');
+            activeTab.classList.remove('text-gray-600', 'border-transparent');
+        }
+
+        // File selection handler
+        function handleFileSelect(type) {
+            const input = document.getElementById(type + 'Input');
+            const fileNameEl = document.getElementById(type + 'FileName');
+            const uploadBtn = document.getElementById(type + 'UploadBtn');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                fileNameEl.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+                uploadBtn.disabled = false;
+
+                // Show image preview
+                if (type === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('imagePreviewImg').src = e.target.result;
+                        document.getElementById('imagePreview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Upload file (voice, image, PDF)
+        async function uploadFile(type) {
+            const input = document.getElementById(type + 'Input');
+
+            if (!input.files || !input.files[0]) {
+                showNotification('Please select a file first', 'error');
+                return;
+            }
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('input_type', type);
+
+            showLoading(true);
+            hideResponse();
+
+            try {
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully!`, 'success');
+
+                    // Show details
+                    if (data.data && data.data.tags) {
+                        showResponse(`Processed! Tags: ${data.data.tags.join(', ')}`);
+                    }
+
+                    // Clear input
+                    input.value = '';
+                    document.getElementById(type + 'FileName').textContent = '';
+                    document.getElementById(type + 'UploadBtn').disabled = true;
+
+                    if (type === 'image') {
+                        document.getElementById('imagePreview').classList.add('hidden');
+                    }
+
+                    // Reload entries and stats
+                    setTimeout(() => {
+                        loadEntries();
+                        loadActions();
+                    }, 500);
+                } else {
+                    showNotification('Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error uploading file: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Create code entry
+        async function createCodeEntry() {
+            const codeInput = document.getElementById('codeInput');
+            const languageInput = document.getElementById('codeLanguage');
+            const code = codeInput.value.trim();
+            const language = languageInput.value;
+
+            if (!code) {
+                showNotification('Please enter some code', 'error');
+                return;
+            }
+
+            showLoading(true);
+            hideResponse();
+
+            try {
+                const response = await fetch(`${API_BASE}/journal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_input: `Code snippet in ${language}:\n\n${code}`,
+                        input_data: {
+                            input_type: 'code_snippet',
+                            language: language,
+                            code_content: code
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    codeInput.value = '';
+                    showNotification('✅ Code snippet saved successfully!', 'success');
+
+                    if (data.data && data.data.tags) {
+                        showResponse(`Tags: ${data.data.tags.join(', ')}`);
+                    }
+
+                    setTimeout(() => {
+                        loadEntries();
+                        loadActions();
+                    }, 500);
+                } else {
+                    showNotification('Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python main.py:*)",
+      "Bash(findstr:*)",
+      "Bash(start /B python main.py api)",
+      "Bash(echo:*)",
+      "Bash(dir /B *.html *.bat 2)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(timeout /t 3)",
+      "Bash(ping:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python:*)",
+      "Bash(tasklist:*)",
+      "Bash(git add:*)",
+      "Bash(del nul)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
