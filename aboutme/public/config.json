@@ -1,0 +1,118 @@
+{
+  "personal": {
+    "name": "Your Name",
+    "title": "Seasonal AI/ML Engineer",
+    "photo": "/path-to-your-photo.jpg",
+    "email": "your.email@example.com",
+    "linkedin": "https://linkedin.com/in/yourprofile",
+    "github": "https://github.com/yourusername"
+  },
+  "about": {
+    "title": "About Me",
+    "description": "I'm a passionate AI/ML Engineer specializing in building intelligent systems that solve real-world problems. With expertise in machine learning algorithms, deep learning architectures, and production-grade AI systems, I transform data into actionable insights and innovative solutions.",
+    "skills": [
+      "Machine Learning",
+      "Deep Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+      "MLOps & Model Deployment",
+      "Python, TensorFlow, PyTorch",
+      "Data Engineering & Analysis"
+    ],
+    "highlights": [
+      {
+        "icon": "brain",
+        "title": "AI Innovation",
+        "description": "Developing cutting-edge AI solutions using state-of-the-art models and techniques"
+      },
+      {
+        "icon": "code",
+        "title": "Production Systems",
+        "description": "Building scalable, production-ready ML pipelines and deployment infrastructure"
+      },
+      {
+        "icon": "trending-up",
+        "title": "Impact Driven",
+        "description": "Focused on creating measurable business value through data-driven AI solutions"
+      }
+    ]
+  },
+  "projects": {
+    "categories": [
+      {
+        "id": "machine-learning",
+        "name": "Machine Learning",
+        "description": "Classical ML and statistical learning projects",
+        "projects": [
+          {
+            "name": "Predictive Analytics Platform",
+            "description": "End-to-end ML platform for time series forecasting with automated feature engineering and model selection",
+            "technologies": ["Python", "Scikit-learn", "XGBoost", "FastAPI"],
+            "githubUrl": "https://github.com/yourusername/project1",
+            "liveUrl": "https://your-project-url.com",
+            "highlights": [
+              "Automated feature engineering pipeline",
+              "95% prediction accuracy",
+              "Real-time inference API"
+            ]
+          },
+          {
+            "name": "Customer Segmentation Engine",
+            "description": "Unsupervised learning system for customer behavior analysis and segmentation",
+            "technologies": ["Python", "K-Means", "DBSCAN", "PCA"],
+            "githubUrl": "https://github.com/yourusername/project2",
+            "liveUrl": "",
+            "highlights": [
+              "Dynamic clustering algorithm",
+              "Interactive visualization dashboard",
+              "Business insights generation"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "artificial-intelligence",
+        "name": "Artificial Intelligence",
+        "description": "Deep learning, NLP, and advanced AI projects",
+        "projects": [
+          {
+            "name": "Intelligent Chatbot System",
+            "description": "Advanced conversational AI powered by transformer models with context awareness and multi-turn dialogue",
+            "technologies": ["Python", "Transformers", "LangChain", "OpenAI API"],
+            "githubUrl": "https://github.com/yourusername/chatbot",
+            "liveUrl": "https://chatbot-demo.com",
+            "highlights": [
+              "Context-aware responses",
+              "Multi-language support",
+              "RAG implementation"
+            ]
+          },
+          {
+            "name": "Computer Vision Pipeline",
+            "description": "Real-time object detection and image classification system using deep neural networks",
+            "technologies": ["PyTorch", "YOLO", "ResNet", "OpenCV"],
+            "githubUrl": "https://github.com/yourusername/cv-project",
+            "liveUrl": "",
+            "highlights": [
+              "Real-time processing",
+              "Multi-object tracking",
+              "Custom model training pipeline"
+            ]
+          },
+          {
+            "name": "NLP Text Analytics Suite",
+            "description": "Comprehensive text analysis toolkit with sentiment analysis, entity recognition, and summarization",
+            "technologies": ["BERT", "spaCy", "Hugging Face", "FastAPI"],
+            "githubUrl": "https://github.com/yourusername/nlp-suite",
+            "liveUrl": "https://nlp-demo.com",
+            "highlights": [
+              "Multi-task learning",
+              "Fine-tuned domain models",
+              "RESTful API interface"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
