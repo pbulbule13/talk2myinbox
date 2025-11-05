@@ -38,6 +38,8 @@ gmail_credentials.json
 gmail_token.json
 calendar_credentials.json
 calendar_token.json
+new_token.txt
+*_token.txt
 
 # AWS Credentials
 .aws/

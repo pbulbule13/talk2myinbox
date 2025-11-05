@@ -15,7 +15,9 @@ except Exception:
 import json
 import os
 import requests
-from ..utils.email_query import parse_email_nl_to_gmail_query
+# Email query parsing (temporarily disabled)
+# from ..utils.email_query import parse_email_nl_to_gmail_query
+# Import LLM fallback for AI-powered email analysis
 from ..utils.llm_fallback import call_llm_with_fallback
 
 # Initialize router
@@ -30,9 +32,135 @@ class _StubOrchestrator:
     async def process_query(self, *args, **kwargs):
         return {"text": "stub", "intent": "unknown", "drafts": [], "calendar_actions": [], "executed": [], "logs": []}
 
+    async def summarize_inbox(self, user_id: str | None = None):
+        """
+        Analyze inbox and provide intelligent summarization with prioritization.
+        Identifies emails needing immediate attention using AI analysis.
+        """
+        from datetime import datetime, timedelta, timezone
+        from ..adapters.email.gmail_adapter import GmailAdapter
+        from ..adapters.calendar.google_calendar_adapter import GoogleCalendarAdapter
+
+        try:
+            # Fetch recent emails
+            gmail = GmailAdapter()
+            email_threads = await gmail.fetch_threads(max_results=50, unread_only=False)
+
+            # Fetch calendar events for context
+            calendar = GoogleCalendarAdapter()
+            today = datetime.now(timezone.utc)
+            week_later = today + timedelta(days=7)
+            calendar_events = await calendar.fetch_events(
+                start_date=today.isoformat(),
+                end_date=week_later.isoformat()
+            )
+
+            # Prepare data for LLM analysis
+            email_data = []
+            for thread in email_threads[:30]:  # Analyze top 30 to avoid token limits
+                email_data.append({
+                    "from": thread.get("from", "Unknown"),
+                    "subject": thread.get("subject", "No Subject"),
+                    "preview": thread.get("preview", "")[:300],
+                    "timestamp": thread.get("timestamp", ""),
+                    "unread": thread.get("unread", False)
+                })
+
+            event_data = []
+            for event in calendar_events[:10]:  # Include upcoming events for context
+                event_data.append({
+                    "summary": event.get("summary", "No Title"),
+                    "start": event.get("start", ""),
+                    "end": event.get("end", "")
+                })
+
+            # Build AI prompt for intelligent analysis
+            prompt = f"""You are an intelligent email assistant. Analyze these emails and identify which ones need immediate attention.
+
+TODAY'S DATE: {today.strftime('%Y-%m-%d %H:%M')}
+
+UPCOMING CALENDAR EVENTS:
+{json.dumps(event_data, indent=2)}
+
+RECENT EMAILS (last 30):
+{json.dumps(email_data, indent=2)}
+
+Analyze these emails and provide:
+1. URGENT: Emails requiring immediate action (deadlines, time-sensitive requests, important meetings)
+2. HIGH PRIORITY: Important emails that should be addressed soon (client requests, team updates, decisions needed)
+3. NORMAL: Regular emails that can be handled later
+4. REASONING: Brief explanation of why each email is categorized as such
+
+Focus on:
+- Deadlines and time-sensitive content
+- Meeting invitations and scheduling requests
+- Questions requiring responses
+- Important senders (executives, clients, partners)
+- Action items and follow-ups
+- Conflicts with calendar events
+
+Return your analysis as a JSON object with this structure:
+{{
+  "urgent": [
+    {{"from": "sender", "subject": "subject", "reason": "why urgent", "action": "what to do"}}
+  ],
+  "high_priority": [
+    {{"from": "sender", "subject": "subject", "reason": "why important"}}
+  ],
+  "summary": "Brief overview of inbox status and key insights",
+  "total_emails": {len(email_data)},
+  "unread_count": {sum(1 for e in email_data if e.get('unread', False))}
+}}
+
+Return ONLY the JSON object, no additional text."""
+
+            # Call LLM with fallback chain
+            print("[Inbox Summary] Calling LLM for intelligent email analysis...")
+            llm_response = call_llm_with_fallback(prompt, max_tokens=1500, temperature=0.3)
+
+            # Parse LLM response
+            try:
+                # Extract JSON from response (handle cases where LLM adds extra text)
+                json_start = llm_response.find('{')
+                json_end = llm_response.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = llm_response[json_start:json_end]
+                    analysis = json.loads(json_str)
+                else:
+                    analysis = json.loads(llm_response)
+
+                print(f"[Inbox Summary] AI analysis complete: {len(analysis.get('urgent', []))} urgent, {len(analysis.get('high_priority', []))} high priority")
+                return analysis
+
+            except json.JSONDecodeError as e:
+                print(f"[Inbox Summary] ERROR parsing LLM JSON response: {e}")
+                print(f"[Inbox Summary] Raw response: {llm_response[:500]}")
+                # Return fallback structure
+                return {
+                    "urgent": [],
+                    "high_priority": [],
+                    "summary": "Email analysis is currently unavailable. Please try again.",
+                    "total_emails": len(email_data),
+                    "unread_count": sum(1 for e in email_data if e.get('unread', False)),
+                    "error": "Failed to parse AI analysis"
+                }
+
+        except Exception as e:
+            print(f"[Inbox Summary] ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "urgent": [],
+                "high_priority": [],
+                "summary": f"Error analyzing inbox: {str(e)}",
+                "total_emails": 0,
+                "unread_count": 0,
+                "error": str(e)
+            }
+
 try:
-    settings = SystemSettings() if SystemSettings else None
-    orchestrator = VoiceAgentOrchestrator(settings=settings) if VoiceAgentOrchestrator else _StubOrchestrator()
+    settings = None  # Disable settings for now
+    orchestrator = _StubOrchestrator()  # Use stub to avoid initialization issues
 except Exception:
     orchestrator = _StubOrchestrator()
 
@@ -121,15 +249,48 @@ async def process_query(request: QueryRequest):
             except Exception as cal_error:
                 print(f"[Query] Calendar fetch warning: {cal_error}")
 
-        # Create prompt for LLM to answer the query
+        # Analyze emails for priority and reply needs
+        unread_emails = [e for e in threads if e.get('unread', False)]
+        emails_from_humans = []
+        urgent_emails = []
+        emails_needing_reply = []
+
+        for email in threads:
+            # Check if from a human (not automated)
+            sender = email.get('from', '').lower()
+            automated_indicators = ['noreply', 'no-reply', 'notification', 'automated', 'mailer-daemon']
+            is_human = not any(ind in sender for ind in automated_indicators)
+
+            if is_human:
+                emails_from_humans.append(email)
+
+            # Check for urgency keywords
+            subject = email.get('subject', '').lower()
+            preview = email.get('preview', '').lower()
+            if any(word in subject or word in preview for word in ['urgent', 'asap', 'priority', 'immediate', 'critical']):
+                urgent_emails.append(email)
+
+            # Emails likely needing reply (unread + from humans)
+            if email.get('unread', False) and is_human:
+                emails_needing_reply.append(email)
+
+        # Create enhanced prompt for LLM to answer the query
         prompt = f"""USER QUESTION: {request.query}
 
 {email_context}{calendar_context}
+
+EMAIL ANALYSIS:
+- Total emails: {len(threads)}
+- Unread emails: {len(unread_emails)}
+- Emails from humans: {len(emails_from_humans)}
+- Urgent/priority emails: {len(urgent_emails)}
+- Emails likely needing reply (unread from humans): {len(emails_needing_reply)}
 
 TASK: Answer the user's question based on the emails and calendar events above.
 
 For questions about:
 - Email counts: Count and categorize emails (e.g., "You received 5 interview emails")
+- Priority/reply questions: Use the EMAIL ANALYSIS data above
 - Specific topics: Search email subjects and content for keywords
 - Meetings: List upcoming calendar events
 - Action items: Identify emails that need replies or attention
@@ -181,15 +342,130 @@ ANSWER:"""
 @router.get("/inbox/summary")
 async def summarize_inbox(user_id: str | None = None):
     """
-    Get a summary of the user's inbox.
+    Get a summary of the user's inbox with AI-powered intelligent analysis.
 
     Returns prioritized emails that need attention, with AI-generated reasoning.
     """
+    from datetime import datetime, timedelta, timezone
+    from ..adapters.email.gmail_adapter import GmailAdapter
+    from ..adapters.calendar.google_calendar_adapter import GoogleCalendarAdapter
+
     try:
-        result = await orchestrator.summarize_inbox(user_id=user_id)
-        return result
+        # Fetch recent emails
+        gmail = GmailAdapter()
+        email_threads = await gmail.fetch_threads(max_results=50, unread_only=False)
+
+        # Fetch calendar events for context
+        calendar = GoogleCalendarAdapter()
+        today = datetime.now(timezone.utc)
+        week_later = today + timedelta(days=7)
+        calendar_events = await calendar.fetch_events(
+            start_date=today.isoformat(),
+            end_date=week_later.isoformat()
+        )
+
+        # Prepare data for LLM analysis
+        email_data = []
+        for thread in email_threads[:30]:  # Analyze top 30 to avoid token limits
+            email_data.append({
+                "from": thread.get("from", "Unknown"),
+                "subject": thread.get("subject", "No Subject"),
+                "preview": thread.get("preview", "")[:300],
+                "timestamp": thread.get("timestamp", ""),
+                "unread": thread.get("unread", False)
+            })
+
+        event_data = []
+        for event in calendar_events[:10]:  # Include upcoming events for context
+            event_data.append({
+                "summary": event.get("summary", "No Title"),
+                "start": event.get("start", ""),
+                "end": event.get("end", "")
+            })
+
+        # Build AI prompt for intelligent analysis
+        prompt = f"""You are an intelligent email assistant. Analyze these emails and identify which ones need immediate attention.
+
+TODAY'S DATE: {today.strftime('%Y-%m-%d %H:%M')}
+
+UPCOMING CALENDAR EVENTS:
+{json.dumps(event_data, indent=2)}
+
+RECENT EMAILS (last 30):
+{json.dumps(email_data, indent=2)}
+
+Analyze these emails and provide:
+1. URGENT: Emails requiring immediate action (deadlines, time-sensitive requests, important meetings)
+2. HIGH PRIORITY: Important emails that should be addressed soon (client requests, team updates, decisions needed)
+3. NORMAL: Regular emails that can be handled later
+4. REASONING: Brief explanation of why each email is categorized as such
+
+Focus on:
+- Deadlines and time-sensitive content
+- Meeting invitations and scheduling requests
+- Questions requiring responses
+- Important senders (executives, clients, partners)
+- Action items and follow-ups
+- Conflicts with calendar events
+
+Return your analysis as a JSON object with this structure:
+{{
+  "urgent": [
+    {{"from": "sender", "subject": "subject", "reason": "why urgent", "action": "what to do"}}
+  ],
+  "high_priority": [
+    {{"from": "sender", "subject": "subject", "reason": "why important"}}
+  ],
+  "summary": "Brief overview of inbox status and key insights",
+  "total_emails": {len(email_data)},
+  "unread_count": {sum(1 for e in email_data if e.get('unread', False))}
+}}
+
+Return ONLY the JSON object, no additional text."""
+
+        # Call LLM with fallback chain
+        print("[Inbox Summary] Calling LLM for intelligent email analysis...")
+        llm_response = call_llm_with_fallback(prompt, max_tokens=1500, temperature=0.3)
+
+        # Parse LLM response
+        try:
+            # Extract JSON from response (handle cases where LLM adds extra text)
+            json_start = llm_response.find('{')
+            json_end = llm_response.rfind('}') + 1
+            if json_start >= 0 and json_end > json_start:
+                json_str = llm_response[json_start:json_end]
+                analysis = json.loads(json_str)
+            else:
+                analysis = json.loads(llm_response)
+
+            print(f"[Inbox Summary] AI analysis complete: {len(analysis.get('urgent', []))} urgent, {len(analysis.get('high_priority', []))} high priority")
+            return analysis
+
+        except json.JSONDecodeError as e:
+            print(f"[Inbox Summary] ERROR parsing LLM JSON response: {e}")
+            print(f"[Inbox Summary] Raw response: {llm_response[:500]}")
+            # Return fallback structure
+            return {
+                "urgent": [],
+                "high_priority": [],
+                "summary": "Email analysis is currently unavailable. Please try again.",
+                "total_emails": len(email_data),
+                "unread_count": sum(1 for e in email_data if e.get('unread', False)),
+                "error": "Failed to parse AI analysis"
+            }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[Inbox Summary] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "urgent": [],
+            "high_priority": [],
+            "summary": f"Error analyzing inbox: {str(e)}",
+            "total_emails": 0,
+            "unread_count": 0,
+            "error": str(e)
+        }
 
 
 # --- Direct Email Send API (no authorization code required) ---
@@ -352,59 +628,171 @@ async def test_gmail():
 
     return result
 
+@router.get("/emails/test")
+async def test_emails():
+    """Test endpoint to verify basic functionality"""
+    return {"status": "ok", "message": "Test endpoint works"}
+
 @router.get("/emails")
-async def get_emails(max_results: int = 10, query: str | None = None, unread_only: bool = False):
-    """
-    Get a simple list of emails from Gmail.
+async def get_emails(max_results: int = 10, query: str = None, unread_only: bool = False):
+    """Get email list - using mock data in mock mode"""
+    import sys
+    import traceback
 
-    Returns a clean list of email threads for display in the dashboard.
-    """
     try:
-        import sys
+        print(f"[GET /emails] Starting - max_results={max_results}, query={query}, unread_only={unread_only}", flush=True)
+
+        from datetime import datetime, timezone, timedelta
         import os
-        from pathlib import Path
 
-        # Add parent directory to path for imports
-        current_dir = Path(__file__).parent.parent.parent
-        if str(current_dir) not in sys.path:
-            sys.path.insert(0, str(current_dir))
+        # Check if we're in mock mode
+        mock_mode = os.getenv("EMAIL_MOCK_MODE", "false").lower() == "true"
+        print(f"[GET /emails] mock_mode={mock_mode}", flush=True)
 
+        if mock_mode:
+            print("[GET /emails] Using mock mode - generating test data", flush=True)
+            # Return mock data directly
+            now = datetime.now(timezone.utc)
+            print(f"[GET /emails] Current time: {now.isoformat()}", flush=True)
+
+            mock_emails = [
+                {
+                    "id": "mock_1",
+                    "from": "john.doe@partner.com",
+                    "subject": "Urgent: Project Deadline Tomorrow",
+                    "preview": "Hi! Just a reminder that the Q4 project deliverables are due tomorrow.",
+                    "body": "Hi! Just a reminder that the Q4 project deliverables are due tomorrow. Can you send me the final report?",
+                    "date": (now - timedelta(hours=2)).isoformat(),
+                    "timestamp": (now - timedelta(hours=2)).isoformat(),
+                    "unread": True,
+                    "attachments": [],
+                    "hasAttachments": False,
+                    "attachmentCount": 0
+                },
+                {
+                    "id": "mock_2",
+                    "from": "hr@company.com",
+                    "subject": "Interview Scheduled - Software Engineer Position",
+                    "preview": "Dear Candidate, We are pleased to schedule your technical interview for next Tuesday at 2 PM.",
+                    "body": "Dear Candidate, We are pleased to schedule your technical interview for next Tuesday at 2 PM. Please confirm your availability.",
+                    "date": (now - timedelta(hours=5)).isoformat(),
+                    "timestamp": (now - timedelta(hours=5)).isoformat(),
+                    "unread": True,
+                    "attachments": [],
+                    "hasAttachments": False,
+                    "attachmentCount": 0
+                },
+                {
+                    "id": "mock_3",
+                    "from": "newsletter@techcrunch.com",
+                    "subject": "Latest Tech News - November 2025",
+                    "preview": "Top stories: AI breakthroughs, new product launches, and industry insights.",
+                    "body": "Top stories: AI breakthroughs, new product launches, and industry insights. Read more...",
+                    "date": (now - timedelta(hours=8)).isoformat(),
+                    "timestamp": (now - timedelta(hours=8)).isoformat(),
+                    "unread": False,
+                    "attachments": [],
+                    "hasAttachments": False,
+                    "attachmentCount": 0
+                }
+            ]
+
+            print(f"[GET /emails] Generated {len(mock_emails)} mock emails", flush=True)
+            result = {
+                "emails": mock_emails[:max_results],
+                "count": len(mock_emails[:max_results])
+            }
+            print(f"[GET /emails] Returning {result['count']} emails", flush=True)
+            return result
+
+        # Real Gmail mode
+        print("[GET /emails] Using REAL Gmail mode", flush=True)
         from voice_agent.adapters.email.gmail_adapter import GmailAdapter
 
-        # Initialize Gmail adapter (uses environment variables internally)
+        print("[GET /emails] Creating GmailAdapter...", flush=True)
         gmail = GmailAdapter()
 
-        # Get recent email threads (optionally filtered by Gmail query)
-        threads = await gmail.fetch_threads(
-            max_results=max_results,
-            unread_only=unread_only,
-            query=query
-        )
+        print(f"[GET /emails] Fetching threads (max={max_results})...", flush=True)
+        threads = await gmail.fetch_threads(max_results=max_results, unread_only=unread_only, query=query)
 
-        # Format for dashboard
+        print(f"[GET /emails] Fetched {len(threads)} threads, converting to email format...", flush=True)
         emails = []
         for thread in threads:
             timestamp = thread.get("timestamp", "")
+            attachments = thread.get("attachments", [])
             emails.append({
                 "id": thread.get("thread_id", ""),
                 "from": thread.get("from", "Unknown"),
                 "subject": thread.get("subject", "No Subject"),
                 "preview": thread.get("preview", "")[:200],
-                "body": thread.get("preview", ""),  # Add body field for frontend
+                "body": thread.get("preview", ""),
                 "date": timestamp,
-                "timestamp": timestamp,  # Add timestamp field for frontend compatibility
-                "unread": thread.get("unread", False)
+                "timestamp": timestamp,
+                "unread": thread.get("unread", False),
+                "attachments": attachments,
+                "hasAttachments": len(attachments) > 0,
+                "attachmentCount": len(attachments)
             })
 
-        return {
-            "emails": emails,
-            "count": len(emails)
-        }
+        print(f"[GET /emails] Successfully returning {len(emails)} emails", flush=True)
+        return {"emails": emails, "count": len(emails)}
+
     except Exception as e:
-        import traceback
-        print(f"Error fetching emails: {e}")
-        print(traceback.format_exc())
+        print("\n" + "=" * 80, flush=True)
+        print(f"[GET /emails] CRITICAL ERROR CAUGHT", flush=True)
+        print(f"[GET /emails] Error type: {type(e).__name__}", flush=True)
+        print(f"[GET /emails] Error message: {str(e)}", flush=True)
+        print(f"[GET /emails] Error errno: {getattr(e, 'errno', 'N/A')}", flush=True)
+        print(f"[GET /emails] Error filename: {getattr(e, 'filename', 'N/A')}", flush=True)
+        print("\n[GET /emails] Full traceback:", flush=True)
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+        print("=" * 80 + "\n", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/emails/attachment/{message_id}/{attachment_id}")
+async def download_attachment(message_id: str, attachment_id: str):
+    """
+    Download an email attachment.
+
+    Args:
+        message_id: The Gmail message ID containing the attachment
+        attachment_id: The attachment ID from Gmail
+
+    Returns:
+        The attachment file as bytes
+    """
+    try:
+        from voice_agent.adapters.email.gmail_adapter import GmailAdapter
+        from fastapi.responses import Response
+        import base64
+
+        gmail = GmailAdapter()
+        service = gmail.service
+
+        # Fetch the attachment
+        attachment = service.users().messages().attachments().get(
+            userId='me',
+            messageId=message_id,
+            id=attachment_id
+        ).execute()
+
+        # Decode the attachment data
+        file_data = base64.urlsafe_b64decode(attachment['data'])
+
+        # Return the file
+        return Response(
+            content=file_data,
+            media_type='application/octet-stream',
+            headers={
+                'Content-Disposition': f'attachment; filename="{attachment_id}"'
+            }
+        )
+
+    except Exception as e:
+        print(f"Error downloading attachment: {e}")
+        raise HTTPException(status_code=500, detail=f"Attachment download error: {str(e)}")
 
 
 @router.get("/calendar/check")

@@ -12,11 +12,10 @@ from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
 
-# Gmail API scopes - use standard modify scope (compatible with most tokens)
+# Gmail API scopes - use full Gmail access (compatible with our refresh token)
 SCOPES = [
-    'https://www.googleapis.com/auth/gmail.readonly',
-    'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/gmail.modify'
+    'https://mail.google.com/',  # Full Gmail access
+    'https://www.googleapis.com/auth/calendar'  # Calendar access
 ]
 
 

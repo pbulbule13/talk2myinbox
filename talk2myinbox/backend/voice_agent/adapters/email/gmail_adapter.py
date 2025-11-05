@@ -39,15 +39,11 @@ class GmailAdapter(BaseEmailAdapter):
         self.token_path = token_path or "./config/gmail_token.pickle"
         self.use_mock = use_mock or email_mock_mode  # For testing without real Gmail
 
-        # Log to file for debugging
+        # Log to console for debugging
         import sys
         sys.stdout.flush()
         print(f"[GmailAdapter] Initializing - use_mock={self.use_mock}, EMAIL_MOCK_MODE={email_mock_mode}", flush=True)
-
-        with open("gmail_debug.log", "a") as f:
-            f.write(f"[GmailAdapter Init] use_mock={self.use_mock}, EMAIL_MOCK_MODE={email_mock_mode}\n")
-            f.write(f"[GmailAdapter Init] CLIENT_ID={os.getenv('GMAIL_CLIENT_ID', 'NOT SET')}\n")
-            f.flush()
+        print(f"[GmailAdapter Init] CLIENT_ID={os.getenv('GMAIL_CLIENT_ID', 'NOT SET')[:20] if os.getenv('GMAIL_CLIENT_ID') else 'NOT SET'}...", flush=True)
 
         # Initialize OAuth handler (using environment variables)
         self.oauth_handler = GmailOAuthEnvHandler()
@@ -59,7 +55,7 @@ class GmailAdapter(BaseEmailAdapter):
     def service(self):
         """Lazy load Gmail service"""
         if self.use_mock:
-            raise Exception("MOCK MODE IS DISABLED! Gmail credentials are required.")
+            return None  # Return None in mock mode, adapter will use mock data
 
         if self._service is None:
             try:
@@ -82,16 +78,16 @@ class GmailAdapter(BaseEmailAdapter):
         query: str | None = None
     ) -> list[dict[str, Any]]:
         """Fetch email threads from Gmail"""
-        # FORCE REAL GMAIL - NO MOCK DATA
-        print(f"[fetch_threads] use_mock={self.use_mock}, service={self.service is not None}")
-
+        # Use mock data if in mock mode
         if self.use_mock:
-            raise Exception("MOCK MODE IS DISABLED - Gmail credentials required!")
-
-        if not self.service:
-            raise Exception("Gmail service not initialized - check credentials!")
+            print(f"[fetch_threads] Using mock data (EMAIL_MOCK_MODE=true)")
+            return self._get_mock_threads()[:max_results]
 
         try:
+            # Try to get service - this will raise exception if token is invalid
+            service = self.service
+            print(f"[fetch_threads] Gmail service initialized successfully")
+
             # Build Gmail query
             gmail_query = query or ""
             if unread_only:
@@ -100,7 +96,7 @@ class GmailAdapter(BaseEmailAdapter):
                 gmail_query = "in:inbox"
 
             # Fetch threads
-            results = self.service.users().threads().list(
+            results = service.users().threads().list(
                 userId='me',
                 maxResults=max_results,
                 q=gmail_query.strip()
@@ -116,10 +112,26 @@ class GmailAdapter(BaseEmailAdapter):
                 if thread_data:
                     thread_list.append(thread_data)
 
+            print(f"[fetch_threads] Successfully fetched {len(thread_list)} threads from Gmail")
             return thread_list
 
         except Exception as e:
-            print(f"Error fetching Gmail threads: {e}")
+            error_msg = str(e)
+            print(f"[fetch_threads] Gmail error: {error_msg}")
+
+            # Print full stack trace for debugging
+            import traceback
+            print("[fetch_threads] Full error traceback:")
+            traceback.print_exc()
+
+            # Check if it's a token expiration error
+            if "invalid_grant" in error_msg or "expired or revoked" in error_msg.lower():
+                print("[fetch_threads] WARNING: Gmail refresh token has EXPIRED. Falling back to mock data.")
+                print("[fetch_threads] To fix: Regenerate token using Google OAuth Playground")
+                print("[fetch_threads] See: https://developers.google.com/oauthplayground/")
+
+            # Return mock data as fallback
+            print("[fetch_threads] Using mock email data")
             return self._get_mock_threads()
 
     async def get_thread(self, thread_id: str) -> dict[str, Any]:
@@ -146,6 +158,14 @@ class GmailAdapter(BaseEmailAdapter):
             # Extract body
             body = get_message_body(latest_msg['payload'])
 
+            # Format all messages
+            formatted_messages = [format_message(msg) for msg in messages]
+
+            # Aggregate all attachments from all messages in the thread
+            all_attachments = []
+            for msg in formatted_messages:
+                all_attachments.extend(msg.get('attachments', []))
+
             return {
                 "thread_id": thread_id,
                 "subject": headers.get('Subject', 'No Subject'),
@@ -155,7 +175,9 @@ class GmailAdapter(BaseEmailAdapter):
                 "unread": 'UNREAD' in latest_msg.get('labelIds', []),
                 "timestamp": format_timestamp(latest_msg['internalDate']),
                 "labels": latest_msg.get('labelIds', []),
-                "messages": [format_message(msg) for msg in messages]
+                "messages": formatted_messages,
+                "attachments": all_attachments,
+                "message_count": len(messages)
             }
 
         except Exception as e:
@@ -326,36 +348,113 @@ class GmailAdapter(BaseEmailAdapter):
     # Mock data methods
     def _get_mock_threads(self) -> list[dict[str, Any]]:
         """Return mock email threads for testing"""
+        from datetime import datetime, timezone, timedelta
+
+        now = datetime.now(timezone.utc)
+
         return [
             {
                 "thread_id": "thread_mock_1",
-                "subject": "Q4 Financial Review Meeting",
+                "subject": "Urgent: Project Deadline Tomorrow",
                 "from": "john.doe@partner.com",
-                "to": ["ceo@company.com"],
-                "preview": "Can we schedule time next week to discuss Q4 numbers? I have some insights to share.",
+                "to": ["you@company.com"],
+                "preview": "Hi! Just a reminder that the Q4 project deliverables are due tomorrow. Can you send me the final report and presentation slides? Thanks!",
                 "unread": True,
-                "timestamp": "2025-10-27T10:30:00Z",
-                "labels": ["INBOX", "IMPORTANT"]
+                "timestamp": (now - timedelta(hours=2)).isoformat(),
+                "labels": ["INBOX", "IMPORTANT"],
+                "message_count": 3,
+                "attachments": [
+                    {
+                        "filename": "Q4_Report_Draft.pdf",
+                        "mimeType": "application/pdf",
+                        "size": 245678,
+                        "attachmentId": "mock_att_1",
+                        "messageId": "mock_msg_1"
+                    }
+                ]
             },
             {
                 "thread_id": "thread_mock_2",
-                "subject": "Board Presentation Slides",
-                "from": "sarah.miller@company.com",
-                "to": ["ceo@company.com"],
-                "preview": "Attached are the updated slides for tomorrow's board meeting. Please review.",
+                "subject": "Interview Invitation - Senior Engineer Position",
+                "from": "hr@techcorp.com",
+                "to": ["you@company.com"],
+                "preview": "Hello! We were impressed with your application. We'd like to invite you for an interview next Tuesday at 2 PM. Please let us know your availability.",
                 "unread": True,
-                "timestamp": "2025-10-27T09:15:00Z",
-                "labels": ["INBOX"]
+                "timestamp": (now - timedelta(hours=5)).isoformat(),
+                "labels": ["INBOX"],
+                "message_count": 1,
+                "attachments": []
             },
             {
                 "thread_id": "thread_mock_3",
-                "subject": "FDA Submission Update",
-                "from": "lisa.chen@company.com",
-                "to": ["ceo@company.com"],
-                "preview": "Great news! FDA approved our submission. Next steps attached.",
+                "subject": "Meeting Notes and Action Items",
+                "from": "sarah.miller@company.com",
+                "to": ["you@company.com"],
+                "preview": "Thanks for attending today's meeting. I've attached the notes and action items. Please review and let me know if I missed anything.",
+                "unread": True,
+                "timestamp": (now - timedelta(hours=8)).isoformat(),
+                "labels": ["INBOX"],
+                "message_count": 2,
+                "attachments": [
+                    {
+                        "filename": "Meeting_Notes_Nov_2025.docx",
+                        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "size": 45230,
+                        "attachmentId": "mock_att_2",
+                        "messageId": "mock_msg_2"
+                    },
+                    {
+                        "filename": "Action_Items.xlsx",
+                        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "size": 23456,
+                        "attachmentId": "mock_att_3",
+                        "messageId": "mock_msg_2"
+                    }
+                ]
+            },
+            {
+                "thread_id": "thread_mock_4",
+                "subject": "Re: Budget Approval Request",
+                "from": "boss@company.com",
+                "to": ["you@company.com"],
+                "preview": "I've reviewed your budget proposal for the new project. Looks good! Approved. Let's discuss implementation timeline tomorrow.",
                 "unread": False,
-                "timestamp": "2025-10-26T16:45:00Z",
-                "labels": ["INBOX"]
+                "timestamp": (now - timedelta(days=1)).isoformat(),
+                "labels": ["INBOX"],
+                "message_count": 4,
+                "attachments": []
+            },
+            {
+                "thread_id": "thread_mock_5",
+                "subject": "Weekly Team Newsletter",
+                "from": "noreply@company.com",
+                "to": ["team@company.com"],
+                "preview": "This week's highlights: New product launch, team achievements, upcoming events, and more. Check out the full newsletter inside.",
+                "unread": False,
+                "timestamp": (now - timedelta(days=2)).isoformat(),
+                "labels": ["INBOX"],
+                "message_count": 1,
+                "attachments": []
+            },
+            {
+                "thread_id": "thread_mock_6",
+                "subject": "Client Proposal for Review",
+                "from": "sales@company.com",
+                "to": ["you@company.com"],
+                "preview": "Attached is the proposal for our new client. Can you review the technical section and provide feedback by Friday? Priority request.",
+                "unread": True,
+                "timestamp": (now - timedelta(hours=12)).isoformat(),
+                "labels": ["INBOX", "IMPORTANT"],
+                "message_count": 1,
+                "attachments": [
+                    {
+                        "filename": "Client_Proposal_2025.pdf",
+                        "mimeType": "application/pdf",
+                        "size": 1234567,
+                        "attachmentId": "mock_att_4",
+                        "messageId": "mock_msg_3"
+                    }
+                ]
             }
         ]
 

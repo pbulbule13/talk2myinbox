@@ -35,10 +35,40 @@ def get_message_body(payload: dict) -> str:
     return body.strip()
 
 
+def get_attachments(payload: dict, message_id: str) -> list[dict[str, Any]]:
+    """Extract attachment metadata from Gmail API payload"""
+    attachments = []
+
+    def extract_parts(parts: list):
+        for part in parts:
+            # Check if part has a filename (indicates attachment)
+            filename = part.get('filename', '')
+            if filename:
+                attachment_id = part['body'].get('attachmentId')
+                if attachment_id:
+                    attachments.append({
+                        'filename': filename,
+                        'mimeType': part.get('mimeType', 'application/octet-stream'),
+                        'size': part['body'].get('size', 0),
+                        'attachmentId': attachment_id,
+                        'messageId': message_id
+                    })
+
+            # Recursively check nested parts
+            if 'parts' in part:
+                extract_parts(part['parts'])
+
+    if 'parts' in payload:
+        extract_parts(payload['parts'])
+
+    return attachments
+
+
 def format_message(message: dict) -> dict[str, Any]:
     """Format a Gmail message into our standard format"""
     headers = {h['name']: h['value'] for h in message['payload']['headers']}
     body = get_message_body(message['payload'])
+    attachments = get_attachments(message['payload'], message['id'])
 
     return {
         "id": message['id'],
@@ -47,7 +77,8 @@ def format_message(message: dict) -> dict[str, Any]:
         "subject": headers.get('Subject', 'No Subject'),
         "date": format_timestamp(message['internalDate']),
         "body": body,
-        "snippet": message.get('snippet', '')
+        "snippet": message.get('snippet', ''),
+        "attachments": attachments
     }
 
 

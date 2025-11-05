@@ -427,7 +427,7 @@ async function loadAllEmails(gmailQuery) {
     const emailList = document.getElementById('email-list');
 
     try {
-        const url = new URL(`${COMM_API}/voice-agent/emails`);
+        const url = new URL(`${COMM_API}/voice-agent/emails-direct`);
         url.searchParams.set('max_results', '30'); // Show 30 emails minimum
         if (gmailQuery) url.searchParams.set('query', gmailQuery);
 
@@ -445,6 +445,23 @@ async function loadAllEmails(gmailQuery) {
         console.log('[Communications] Received data:', data);
 
         const emails = data.emails || [];
+
+        // Check if we're using mock data (mock IDs start with "thread_mock_")
+        const usingMockData = emails.length > 0 && emails[0].id && emails[0].id.startsWith('thread_mock_');
+        if (usingMockData) {
+            console.warn('[Communications] ⚠️ Using MOCK DATA - Gmail token may be expired');
+            // Show the warning banner
+            const banner = document.getElementById('mock-data-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        } else {
+            // Hide the banner if using real data
+            const banner = document.getElementById('mock-data-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
 
         if (emails.length === 0) {
             console.warn('[Communications] No emails returned from API');
@@ -580,6 +597,22 @@ function renderEmailList() {
             t.emails.some(e => e.id === email.id)
         );
 
+        // Format attachments
+        const attachments = email.attachments || [];
+        const attachmentsHTML = attachments.length > 0 ? `
+            <div class="mt-2 flex flex-wrap gap-1">
+                ${attachments.map(att => `
+                    <a href="${COMM_API}/voice-agent/emails/attachment/${att.messageId}/${att.attachmentId}"
+                       download="${escapeHtml(att.filename)}"
+                       onclick="event.stopPropagation();"
+                       class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded flex items-center gap-1"
+                       title="${escapeHtml(att.filename)} (${formatFileSize(att.size)})">
+                        📎 ${escapeHtml(att.filename.substring(0, 20))}${att.filename.length > 20 ? '...' : ''}
+                    </a>
+                `).join('')}
+            </div>
+        ` : '';
+
         return `
         <div class="email-item border-b border-gray-200 p-4 hover:bg-gray-50 cursor-pointer transition-all"
              onclick="selectEmail('${email.id}')">
@@ -592,9 +625,11 @@ function renderEmailList() {
                         ${thread && thread.messageCount > 2 ? `<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">💬 ${thread.messageCount} msgs</span>` : ''}
                         ${thread && thread.isJobApplication ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">💼 Job App</span>' : ''}
                         ${thread && thread.needsFollowUp ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⚠️ Follow-up</span>' : ''}
+                        ${attachments.length > 0 ? `<span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">📎 ${attachments.length}</span>` : ''}
                     </div>
                     <div class="text-sm font-medium text-gray-800 line-clamp-1">${escapeHtml(email.subject)}</div>
                     <div class="text-xs text-gray-600 line-clamp-2">${escapeHtml(email.preview || email.body || '')}</div>
+                    ${attachmentsHTML}
                 </div>
                 <div class="text-xs text-gray-500 ml-2">${formatTime(email.timestamp)}</div>
             </div>
@@ -1232,6 +1267,16 @@ function formatTime(timestamp) {
 }
 
 /**
+ * Format file size in human-readable format
+ */
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
  * Escape HTML
  */
 function escapeHtml(text) {
@@ -1580,22 +1625,25 @@ async function loadDaySummary() {
             `;
         }
 
-        // Key stats
+        // Store summary data globally for filtering
+        window.dailySummaryData = data;
+
+        // Key stats with click handlers to filter inbox
         summaryHTML += `
             <div class="grid grid-cols-2 gap-2 mb-2">
-                <div class="bg-blue-50 rounded p-2 text-center border border-blue-200">
+                <div onclick="filterInboxByCategory('all')" class="bg-blue-50 rounded p-2 text-center border border-blue-200 cursor-pointer hover:bg-blue-100 transition-all">
                     <div class="text-lg font-bold text-blue-700">${data.total_analyzed || 0}</div>
                     <div class="text-xs text-blue-600">Emails Analyzed</div>
                 </div>
-                <div class="bg-red-50 rounded p-2 text-center border border-red-200">
+                <div onclick="filterInboxByCategory('urgent')" class="bg-red-50 rounded p-2 text-center border border-red-200 cursor-pointer hover:bg-red-100 transition-all">
                     <div class="text-lg font-bold text-red-700">${data.urgent_count || 0}</div>
                     <div class="text-xs text-red-600">Urgent Items</div>
                 </div>
-                <div class="bg-purple-50 rounded p-2 text-center border border-purple-200">
+                <div onclick="filterInboxByCategory('need-reply')" class="bg-purple-50 rounded p-2 text-center border border-purple-200 cursor-pointer hover:bg-purple-100 transition-all">
                     <div class="text-lg font-bold text-purple-700">${data.emails_needing_reply || 0}</div>
                     <div class="text-xs text-purple-600">Need Reply</div>
                 </div>
-                <div class="bg-green-50 rounded p-2 text-center border border-green-200">
+                <div onclick="filterInboxByCategory('conversations')" class="bg-green-50 rounded p-2 text-center border border-green-200 cursor-pointer hover:bg-green-100 transition-all">
                     <div class="text-lg font-bold text-green-700">${data.conversation_threads || 0}</div>
                     <div class="text-xs text-green-600">Conversations</div>
                 </div>
@@ -1701,10 +1749,122 @@ async function loadDaySummary() {
     }
 }
 
+/**
+ * Filter inbox by daily summary category
+ * @param {string} category - Category to filter by: 'all', 'urgent', 'need-reply', 'conversations'
+ */
+function filterInboxByCategory(category) {
+    console.log(`[Filter] Filtering inbox by category: ${category}`);
+
+    const emailList = document.getElementById('email-list');
+    const allEmails = window.communicationsState.emails;
+
+    if (!allEmails || allEmails.length === 0) {
+        showNotification('No emails to filter', 'info');
+        return;
+    }
+
+    let filteredEmails = [];
+    let categoryLabel = '';
+
+    switch(category) {
+        case 'all':
+            filteredEmails = allEmails;
+            categoryLabel = 'All Emails';
+            break;
+
+        case 'urgent':
+            // Filter emails with urgent keywords (matching backend logic)
+            filteredEmails = allEmails.filter(email => {
+                const subject = (email.subject || '').toLowerCase();
+                const preview = (email.preview || '').toLowerCase();
+                const urgentKeywords = ['urgent', 'asap', 'priority', 'immediate', 'critical'];
+                return urgentKeywords.some(keyword =>
+                    subject.includes(keyword) || preview.includes(keyword)
+                );
+            });
+            categoryLabel = 'Urgent Items';
+            break;
+
+        case 'need-reply':
+            // Filter unread emails (emails likely needing reply)
+            filteredEmails = allEmails.filter(email => email.unread === true);
+            categoryLabel = 'Emails Needing Reply';
+            break;
+
+        case 'conversations':
+            // Filter conversation threads (2+ messages)
+            filteredEmails = allEmails.filter(email => {
+                // Find thread for this email
+                const thread = window.communicationsState.threads?.find(t =>
+                    t.emails?.some(e => e.id === email.id)
+                );
+                return thread && thread.messageCount >= 2;
+            });
+            categoryLabel = 'Conversation Threads';
+            break;
+
+        default:
+            filteredEmails = allEmails;
+            categoryLabel = 'All Emails';
+    }
+
+    console.log(`[Filter] Found ${filteredEmails.length} emails in category: ${category}`);
+
+    // Update state and re-render
+    const originalEmails = window.communicationsState.emails;
+    window.communicationsState.emails = filteredEmails;
+    window.communicationsState.currentPage = 1; // Reset to first page
+
+    // Add filter indicator to inbox
+    const inboxContainer = emailList.parentElement;
+    let filterIndicator = document.getElementById('filter-indicator');
+
+    if (!filterIndicator) {
+        filterIndicator = document.createElement('div');
+        filterIndicator.id = 'filter-indicator';
+        inboxContainer.insertBefore(filterIndicator, emailList);
+    }
+
+    if (category === 'all') {
+        // Remove filter indicator
+        filterIndicator.innerHTML = '';
+        filterIndicator.className = '';
+    } else {
+        // Show filter indicator
+        filterIndicator.className = 'bg-blue-50 border border-blue-200 rounded p-2 mb-2 flex justify-between items-center';
+        filterIndicator.innerHTML = `
+            <div class="text-sm text-blue-800">
+                <span class="font-semibold">🔍 Filtered:</span> ${categoryLabel} (${filteredEmails.length} emails)
+            </div>
+            <button onclick="filterInboxByCategory('all')"
+                    class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold">
+                Clear Filter
+            </button>
+        `;
+    }
+
+    // Render filtered list
+    renderEmailList();
+
+    // Store original emails for restoring later
+    if (category !== 'all') {
+        window.communicationsState._originalEmails = originalEmails;
+    } else if (window.communicationsState._originalEmails) {
+        window.communicationsState.emails = window.communicationsState._originalEmails;
+        delete window.communicationsState._originalEmails;
+    }
+
+    showNotification(`Showing ${filteredEmails.length} ${categoryLabel.toLowerCase()}`, 'success');
+}
+
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     console.log('[Communications] Initializing...');
     refreshCommunications();
+
+    // Auto-load Daily Summary
+    loadDaySummary();
 
     // Auto-refresh every 60 seconds
     setInterval(() => {
