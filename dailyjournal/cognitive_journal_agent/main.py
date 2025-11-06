@@ -329,6 +329,14 @@ def api_mode():
             traceback.print_exc()
             raise HTTPException(status_code=500, detail=str(e))
 
+    # Include calendar routes
+    try:
+        from api.calendar_routes import router as calendar_router
+        app.include_router(calendar_router)
+    except ImportError as e:
+        print(f"Warning: Could not load calendar routes: {e}")
+        print("Calendar features will not be available.")
+
     # Start server
     print("\n" + "="*60)
     print("COGNITIVE JOURNAL AGENT - API Server")

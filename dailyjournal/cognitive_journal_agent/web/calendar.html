@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Calendar Integration - Cognitive Journal Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+            --border-radius: 0.5rem;
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: white;
+            padding: 2rem 3rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-text h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-text p {
+            font-size: 0.95rem;
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1.25rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: white;
+            color: var(--gray-900);
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2.5rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--gray-300);
+        }
+
+        .card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+            color: var(--gray-900);
+            font-family: inherit;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input-group input[type="color"] {
+            height: 3rem;
+            padding: 0.25rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--border-radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--gray-50);
+        }
+
+        .file-upload:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--gray-400);
+        }
+
+        .file-upload-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-hint {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .calendar-source {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .calendar-source:hover {
+            background: white;
+            border-color: var(--gray-300);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .calendar-source-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .source-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            border: 2px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .source-details strong {
+            display: block;
+            font-size: 1rem;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .source-details small {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .event-item {
+            background: white;
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            border-left-width: 4px;
+            transition: var(--transition);
+        }
+
+        .event-item:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateX(4px);
+        }
+
+        .event-item.conflict {
+            border-left-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-time {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-location {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-description {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .conflict-badge {
+            display: inline-flex;
+            align-items: center;
+            background: var(--danger);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .spinner {
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+            margin: 3rem auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray-500);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-hint {
+            font-size: 0.95rem;
+            color: var(--gray-500);
+        }
+
+        .icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                text-align: left;
+            }
+
+            .tab-content {
+                padding: 1.5rem;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .loader {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">📅</div>
+                    <div class="header-text">
+                        <h1>Multi-Calendar Integration</h1>
+                        <p>Unify all your calendars - Never miss an event again</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-success" onclick="syncAllCalendars()">
+                        <span>🔄</span> Sync All
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('sources')">
+                📋 Calendar Sources
+            </button>
+            <button class="tab" onclick="switchTab('events')">
+                📅 Unified Events
+            </button>
+            <button class="tab" onclick="switchTab('import')">
+                📥 Import Calendar
+            </button>
+            <button class="tab" onclick="switchTab('analytics')">
+                📊 Analytics
+            </button>
+        </div>
+
+        <!-- Calendar Sources Tab -->
+        <div id="sources-tab" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Add Calendar Source</h2>
+                </div>
+                <div class="card">
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Calendar Type</label>
+                            <select id="source-type">
+                                <option value="google">🌐 Google Calendar</option>
+                                <option value="outlook">📧 Outlook/Microsoft 365</option>
+                                <option value="ical">📄 iCal File (.ics)</option>
+                                <option value="ocr">📸 OCR Image</option>
+                                <option value="manual" selected>✍️ Manual Entry</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Display Name</label>
+                            <input type="text" id="source-name" placeholder="e.g., Work Calendar">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Color (for UI display)</label>
+                        <input type="color" id="source-color" value="#6366f1">
+                    </div>
+                    <button class="btn btn-primary" onclick="addCalendarSource()">
+                        ➕ Add Calendar Source
+                    </button>
+                </div>
+
+                <div id="add-source-message" class="message"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>Your Calendar Sources</h2>
+                </div>
+                <div id="calendar-sources-list">
+                    <div class="spinner" id="sources-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unified Events Tab -->
+        <div id="events-tab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Unified Calendar View</h2>
+                </div>
+
+                <div class="stats" id="event-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-events">0</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="conflicts-count">0</div>
+                        <div class="stat-label">Conflicts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sources-count">0</div>
+                        <div class="stat-label">Calendar Sources</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Start Date</label>
+                            <input type="date" id="events-start-date">
+                        </div>
+                        <div class="input-group">
+                            <label>End Date</label>
+                            <input type="date" id="events-end-date">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="loadEvents()">
+                            🔍 Load Events
+                        </button>
+                        <button class="btn btn-success" onclick="syncAllCalendars()">
+                            🔄 Sync All Calendars
+                        </button>
+                    </div>
+                </div>
+
+                <div id="events-message" class="message"></div>
+
+                <div id="events-list">
+                    <div class="spinner" id="events-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Calendar Tab -->
+        <div id="import-tab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Import Calendar from Image (OCR)</h2>
+                </div>
+                <div class="card">
+                    <div class="file-upload" onclick="document.getElementById('ocr-file').click()">
+                        <input type="file" id="ocr-file" accept="image/*" onchange="handleOCRUpload(this)">
+                        <div class="file-upload-icon">📷</div>
+                        <div class="file-upload-text">Click to upload calendar image</div>
+                        <div class="file-upload-hint">Supported formats: JPG, PNG, JPEG</div>
+                    </div>
+                    <div class="input-group" style="margin-top: 1.5rem;">
+                        <label>Select Calendar Source</label>
+                        <select id="ocr-source-select"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Reference Date (optional)</label>
+                        <input type="date" id="ocr-reference-date">
+                    </div>
+                </div>
+                <div id="ocr-message" class="message"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>Import iCal/ICS File</h2>
+                </div>
+                <div class="card">
+                    <div class="file-upload" onclick="document.getElementById('ical-file').click()">
+                        <input type="file" id="ical-file" accept=".ics,.ical" onchange="handleICalUpload(this)">
+                        <div class="file-upload-icon">📅</div>
+                        <div class="file-upload-text">Click to upload iCal file</div>
+                        <div class="file-upload-hint">Supported formats: .ics, .ical</div>
+                    </div>
+                    <div class="input-group" style="margin-top: 1.5rem;">
+                        <label>Select Calendar Source</label>
+                        <select id="ical-source-select"></select>
+                    </div>
+                </div>
+                <div id="ical-message" class="message"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>Connect OAuth Calendar</h2>
+                </div>
+                <div class="card">
+                    <h3>🌐 Google Calendar</h3>
+                    <div class="input-group">
+                        <label>Your Gmail Address</label>
+                        <input type="email" id="google-email" placeholder="your.email@gmail.com">
+                    </div>
+                    <button class="btn btn-primary" onclick="authenticateGoogleCalendar()">
+                        Connect Google Calendar
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3>📧 Microsoft Outlook/365</h3>
+                    <p style="margin-bottom: 1rem; color: var(--gray-600);">You'll be redirected to Microsoft login page</p>
+                    <button class="btn btn-primary" onclick="authenticateMicrosoftCalendar()">
+                        Connect Microsoft Calendar
+                    </button>
+                </div>
+
+                <div id="oauth-message" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics-tab" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2>Calendar Analytics</h2>
+                </div>
+                <div class="card">
+                    <div class="input-group">
+                        <label>Select Date</label>
+                        <input type="date" id="analytics-date">
+                    </div>
+                    <button class="btn btn-primary" onclick="loadDailyAnalytics()">
+                        📊 Load Analytics
+                    </button>
+                </div>
+
+                <div id="analytics-message" class="message"></div>
+
+                <div id="analytics-results" style="display: none;">
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-total-events">0</div>
+                            <div class="stat-label">Total Events</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-duration">0</div>
+                            <div class="stat-label">Scheduled Hours</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-free-time">0</div>
+                            <div class="stat-label">Free Hours</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-conflicts">0</div>
+                            <div class="stat-label">Conflicts</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>⏰ Busiest Hours</h3>
+                        <div id="busiest-hours"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 Events by Calendar Source</h3>
+                        <div id="event-breakdown"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:7000';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCalendarSources();
+            setDefaultDates();
+        });
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            document.getElementById('events-start-date').value = today;
+            document.getElementById('events-end-date').value = nextMonth;
+            document.getElementById('analytics-date').value = today;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'sources') {
+                loadCalendarSources();
+            } else if (tabName === 'events') {
+                loadEvents();
+            } else if (tabName === 'import') {
+                loadSourceSelects();
+            }
+        }
+
+        async function addCalendarSource() {
+            const type = document.getElementById('source-type').value;
+            const name = document.getElementById('source-name').value;
+            const color = document.getElementById('source-color').value;
+
+            if (!name) {
+                showMessage('add-source-message', 'Please enter a display name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sources`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_type: type,
+                        display_name: name,
+                        color: color
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('add-source-message', data.message, 'success');
+                    document.getElementById('source-name').value = '';
+                    loadCalendarSources();
+                } else {
+                    showMessage('add-source-message', 'Failed to add calendar source', 'error');
+                }
+            } catch (error) {
+                showMessage('add-source-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadCalendarSources() {
+            const spinner = document.getElementById('sources-spinner');
+            const list = document.getElementById('calendar-sources-list');
+
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sources`);
+                const data = await response.json();
+
+                spinner.style.display = 'none';
+
+                if (data.success && data.sources) {
+                    list.innerHTML = '';
+
+                    if (data.sources.length === 0) {
+                        list.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-text">No calendar sources yet</div>
+                                <div class="empty-state-hint">Add your first calendar source above to get started</div>
+                            </div>
+                        `;
+                    } else {
+                        data.sources.forEach(source => {
+                            const div = document.createElement('div');
+                            div.className = 'calendar-source';
+                            div.innerHTML = `
+                                <div class="calendar-source-info">
+                                    <div class="source-color" style="background-color: ${source.color}"></div>
+                                    <div class="source-details">
+                                        <strong>${source.display_name}</strong>
+                                        <small>${source.source_type}${source.is_active ? ' <span class="badge badge-success">✓ Active</span>' : ' <span class="badge badge-danger">✗ Inactive</span>'}</small>
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-success" onclick="syncCalendarSource('${source.source_id}')">🔄 Sync</button>
+                                    <button class="btn btn-danger" onclick="deleteCalendarSource('${source.source_id}')">🗑️ Delete</button>
+                                </div>
+                            `;
+                            list.appendChild(div);
+                        });
+                    }
+
+                    document.getElementById('sources-count').textContent = data.sources.length;
+                }
+            } catch (error) {
+                spinner.style.display = 'none';
+                showMessage('add-source-message', `Error loading sources: ${error.message}`, 'error');
+            }
+        }
+
+        async function syncCalendarSource(sourceId) {
+            try {
+                showMessage('add-source-message', 'Syncing calendar...', 'info');
+                const response = await fetch(`${API_BASE}/calendar/sync/${sourceId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('add-source-message', data.message, 'success');
+                    loadEvents();
+                } else {
+                    showMessage('add-source-message', 'Sync failed', 'error');
+                }
+            } catch (error) {
+                showMessage('add-source-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function syncAllCalendars() {
+            try {
+                showMessage('events-message', 'Syncing all calendars...', 'info');
+                const response = await fetch(`${API_BASE}/calendar/sync/all`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('events-message', data.message, 'success');
+                    loadEvents();
+                } else {
+                    showMessage('events-message', 'Sync failed', 'error');
+                }
+            } catch (error) {
+                showMessage('events-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteCalendarSource(sourceId) {
+            if (!confirm('Are you sure you want to delete this calendar source?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sources/${sourceId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('add-source-message', data.message, 'success');
+                    loadCalendarSources();
+                } else {
+                    showMessage('add-source-message', 'Delete failed', 'error');
+                }
+            } catch (error) {
+                showMessage('add-source-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadEvents() {
+            const spinner = document.getElementById('events-spinner');
+            const list = document.getElementById('events-list');
+            const startDate = document.getElementById('events-start-date').value;
+            const endDate = document.getElementById('events-end-date').value;
+
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/events?start_date=${startDate}&end_date=${endDate}`);
+                const data = await response.json();
+
+                spinner.style.display = 'none';
+
+                if (data.success) {
+                    document.getElementById('total-events').textContent = data.count;
+                    document.getElementById('conflicts-count').textContent = data.conflicts ? data.conflicts.length : 0;
+
+                    list.innerHTML = '';
+
+                    if (data.events.length === 0) {
+                        list.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📅</div>
+                                <div class="empty-state-text">No events found</div>
+                                <div class="empty-state-hint">Try adjusting the date range or syncing your calendars</div>
+                            </div>
+                        `;
+                    } else {
+                        data.events.forEach(event => {
+                            const div = document.createElement('div');
+                            div.className = 'event-item' + (event.has_conflict ? ' conflict' : '');
+
+                            const startTime = new Date(event.start_time);
+                            const endTime = new Date(event.end_time);
+
+                            const timeStr = `${startTime.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            })}`;
+
+                            const startTimeStr = startTime.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
+                            });
+
+                            const endTimeStr = endTime.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
+                            });
+
+                            div.innerHTML = `
+                                <div class="event-header">
+                                    <div class="event-title">
+                                        ${event.title}
+                                        ${event.has_conflict ? '<span class="conflict-badge">⚠️ Conflict</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="event-time">🕐 ${timeStr} • ${startTimeStr} - ${endTimeStr}</div>
+                                ${event.location ? `<div class="event-location">📍 ${event.location}</div>` : ''}
+                                ${event.description ? `<div class="event-description">${event.description}</div>` : ''}
+                            `;
+                            list.appendChild(div);
+                        });
+                    }
+
+                    if (data.conflicts && data.conflicts.length > 0) {
+                        showMessage('events-message', `⚠️ ${data.conflicts.length} scheduling conflicts detected!`, 'error');
+                    }
+                }
+            } catch (error) {
+                spinner.style.display = 'none';
+                showMessage('events-message', `Error loading events: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadSourceSelects() {
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sources`);
+                const data = await response.json();
+
+                if (data.success && data.sources) {
+                    const ocrSelect = document.getElementById('ocr-source-select');
+                    const icalSelect = document.getElementById('ical-source-select');
+
+                    [ocrSelect, icalSelect].forEach(select => {
+                        select.innerHTML = '<option value="">-- Select Calendar Source --</option>';
+                        data.sources.forEach(source => {
+                            const option = document.createElement('option');
+                            option.value = source.source_id;
+                            option.textContent = source.display_name;
+                            select.appendChild(option);
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading sources:', error);
+            }
+        }
+
+        async function handleOCRUpload(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const sourceId = document.getElementById('ocr-source-select').value;
+            if (!sourceId) {
+                showMessage('ocr-message', 'Please select a calendar source first', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('source_id', sourceId);
+
+            const refDate = document.getElementById('ocr-reference-date').value;
+            if (refDate) {
+                formData.append('reference_date', refDate);
+            }
+
+            try {
+                showMessage('ocr-message', '🔄 Processing image... This may take a moment.', 'info');
+
+                const response = await fetch(`${API_BASE}/calendar/import/ocr`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('ocr-message', `✅ ${data.message}`, 'success');
+                } else {
+                    showMessage('ocr-message', 'OCR import failed', 'error');
+                }
+            } catch (error) {
+                showMessage('ocr-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function handleICalUpload(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const sourceId = document.getElementById('ical-source-select').value;
+            if (!sourceId) {
+                showMessage('ical-message', 'Please select a calendar source first', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('source_id', sourceId);
+
+            try {
+                showMessage('ical-message', '🔄 Importing iCal file...', 'info');
+
+                const response = await fetch(`${API_BASE}/calendar/import/ical`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('ical-message', `✅ ${data.message}`, 'success');
+                } else {
+                    showMessage('ical-message', 'iCal import failed', 'error');
+                }
+            } catch (error) {
+                showMessage('ical-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function authenticateGoogleCalendar() {
+            const email = document.getElementById('google-email').value;
+            if (!email) {
+                showMessage('oauth-message', 'Please enter your Gmail address', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('user_email', email);
+
+                const response = await fetch(`${API_BASE}/calendar/auth/google`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('oauth-message', data.message, 'success');
+                } else {
+                    showMessage('oauth-message', 'Google Calendar authentication failed', 'error');
+                }
+            } catch (error) {
+                showMessage('oauth-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function authenticateMicrosoftCalendar() {
+            try {
+                const response = await fetch(`${API_BASE}/calendar/auth/microsoft/url`);
+                const data = await response.json();
+
+                if (data.success && data.auth_url) {
+                    window.open(data.auth_url, '_blank');
+                    showMessage('oauth-message', '🔄 Please complete authentication in the new window', 'info');
+                } else {
+                    showMessage('oauth-message', 'Failed to get authentication URL', 'error');
+                }
+            } catch (error) {
+                showMessage('oauth-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadDailyAnalytics() {
+            const date = document.getElementById('analytics-date').value;
+            if (!date) {
+                showMessage('analytics-message', 'Please select a date', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/analytics/daily?date=${date}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('analytics-results').style.display = 'block';
+                    document.getElementById('analytics-total-events').textContent = data.total_events;
+                    document.getElementById('analytics-duration').textContent = (data.total_duration_minutes / 60).toFixed(1);
+                    document.getElementById('analytics-free-time').textContent = (data.free_time_minutes / 60).toFixed(1);
+                    document.getElementById('analytics-conflicts').textContent = data.conflict_count;
+
+                    const busiestDiv = document.getElementById('busiest-hours');
+                    busiestDiv.innerHTML = data.busiest_hours.map(hour =>
+                        `<span class="badge badge-success" style="margin: 0.25rem;">${hour}:00</span>`
+                    ).join('');
+
+                    const breakdownDiv = document.getElementById('event-breakdown');
+                    breakdownDiv.innerHTML = Object.entries(data.event_breakdown).map(([source, count]) =>
+                        `<div style="padding: 0.75rem; margin-bottom: 0.5rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid var(--primary);">${source}: <strong>${count} events</strong></div>`
+                    ).join('');
+
+                    showMessage('analytics-message', '✅ Analytics loaded successfully', 'success');
+                } else {
+                    showMessage('analytics-message', 'Failed to load analytics', 'error');
+                }
+            } catch (error) {
+                showMessage('analytics-message', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showMessage(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.className = `message ${type}`;
+            el.textContent = message;
+            el.style.display = 'block';
+
+            setTimeout(() => {
+                el.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
