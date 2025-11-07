@@ -117,6 +117,7 @@ class CalendarEventInput(BaseModel):
 class CalendarManagementTool(BaseTool):
     """
     Tool to add or block time on the user's calendar.
+    Now supports natural language date/time parsing!
     Configurable via environment variables:
     - CALENDAR_BACKEND: 'google', 'outlook', or 'local' (default: 'local')
     - GOOGLE_CALENDAR_CREDENTIALS: Path to Google Calendar credentials JSON
@@ -127,10 +128,12 @@ class CalendarManagementTool(BaseTool):
     Use this tool to add events to the calendar or block time.
     Input should include event_title, start_time, and duration_minutes.
     Optionally include description and attendees.
+    Supports natural language time expressions!
     Examples:
     - "Block out two hours tomorrow morning for deep work"
     - "Add a meeting with Sarah on Friday at 2pm for 1 hour"
     - "Schedule a dentist appointment next Tuesday at 10am"
+    - "Block calendar for 2-3pm tomorrow for kids pickup"
     """
     args_schema: Type[BaseModel] = CalendarEventInput
 
@@ -151,9 +154,18 @@ class CalendarManagementTool(BaseTool):
                 # Try parsing as ISO format first
                 event_start = datetime.fromisoformat(start_time)
             except ValueError:
-                # Handle natural language time (simplified)
-                # In production, use a library like dateparser
-                return f"Error: Could not parse start time '{start_time}'. Please use ISO format (YYYY-MM-DDTHH:MM:SS)."
+                # Use natural language parser
+                try:
+                    import dateparser
+                    event_start = dateparser.parse(start_time, settings={
+                        'PREFER_DATES_FROM': 'future',
+                        'TIMEZONE': 'UTC'
+                    })
+
+                    if not event_start:
+                        return f"Error: Could not parse start time '{start_time}'. Try formats like 'tomorrow 2pm', 'next Tuesday 10am', or ISO format."
+                except ImportError:
+                    return f"Error: Natural language parsing not available. Please use ISO format (YYYY-MM-DDTHH:MM:SS)."
 
             event_end = event_start + timedelta(minutes=duration_minutes)
 
@@ -326,6 +338,90 @@ class WebSearchTool(BaseTool):
 
 
 # ===========================
+# Reminder Tool
+# ===========================
+
+class ReminderInput(BaseModel):
+    """Input schema for ReminderTool."""
+    message: str = Field(description="What to remind about")
+    reminder_time: str = Field(description="When to remind (natural language or ISO format)")
+    recipient: str = Field(default="self", description="Who to remind (default: self)")
+    notification_method: str = Field(default="log", description="Notification method: log, email, browser")
+
+
+class ReminderTool(BaseTool):
+    """
+    Tool to set reminders and notifications.
+    Supports natural language time expressions.
+    """
+    name: str = "set_reminder"
+    description: str = """
+    Use this tool to set reminders for tasks or events.
+    Supports natural language time expressions.
+    Examples:
+    - "Remind me at 8pm to call Mr. A for interview"
+    - "Set reminder for tomorrow 9am to review project"
+    - "Remind me in 30 minutes to take a break"
+    """
+    args_schema: Type[BaseModel] = ReminderInput
+
+    def _run(
+        self,
+        message: str,
+        reminder_time: str,
+        recipient: str = "self",
+        notification_method: str = "log",
+    ) -> str:
+        """Execute the reminder creation."""
+        try:
+            # Parse reminder time
+            try:
+                # Try ISO format first
+                parsed_time = datetime.fromisoformat(reminder_time)
+            except ValueError:
+                # Use natural language parser
+                try:
+                    import dateparser
+                    parsed_time = dateparser.parse(reminder_time, settings={
+                        'PREFER_DATES_FROM': 'future',
+                        'TIMEZONE': 'UTC'
+                    })
+
+                    if not parsed_time:
+                        return f"Error: Could not parse reminder time '{reminder_time}'. Try 'tomorrow 8pm', 'in 30 minutes', etc."
+                except ImportError:
+                    return "Error: Natural language parsing not available."
+
+            # Check if time is in the future
+            if parsed_time <= datetime.now():
+                return f"Error: Reminder time must be in the future. You specified: {parsed_time}"
+
+            # Create reminder using reminder system
+            try:
+                from services.reminder_system import get_reminder_system
+
+                reminder_system = get_reminder_system()
+                reminder = reminder_system.add_reminder(
+                    message=message,
+                    reminder_time=parsed_time,
+                    recipient=recipient,
+                    notification_method=notification_method
+                )
+
+                return f"Reminder set successfully for {parsed_time.strftime('%Y-%m-%d %H:%M')}. Message: {message}"
+
+            except Exception as e:
+                return f"Error creating reminder: {str(e)}"
+
+        except Exception as e:
+            return f"Error setting reminder: {str(e)}"
+
+    async def _arun(self, *args, **kwargs):
+        """Async version."""
+        return self._run(*args, **kwargs)
+
+
+# ===========================
 # Tool Registry
 # ===========================
 
@@ -337,6 +433,7 @@ def get_all_tools() -> list:
     return [
         SendEmailTool(),
         CalendarManagementTool(),
+        ReminderTool(),
         FileOperationsTool(),
         WebSearchTool(),
     ]

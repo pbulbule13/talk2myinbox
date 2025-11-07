@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python main.py:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(start webcalendar.html)",
+      "Bash(start \"\" \"C:\\Users\\pbkap\\Documents\\euron\\Projects\\dailyjournal\\cognitive_journal_agent\\web\\calendar.html\")",
+      "Bash(dir /b *.html 2)",
+      "Bash(nul)",
+      "Bash(start \"\" \"C:\\Users\\pbkap\\Documents\\euron\\Projects\\dailyjournal\\cognitive_journal_agent\\web_ui.html\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add Multi-Calendar Integration and Professional Web UI\n\nMajor Features Added:\n- Multi-calendar integration (Google, Outlook, iCal, OCR, manual)\n- Professional calendar web UI with event management\n- Calendar data models (CalendarSource, UnifiedEvent, EventConflict)\n- Calendar API routes with 17 endpoints\n- OCR-based calendar image extraction\n- Calendar sync services with conflict detection\n- Event analytics and day view features\n\nNew Files:\n- api/calendar_routes.py: FastAPI endpoints for calendar operations\n- nodes/calendar_storage.py: Calendar persistence layer\n- services/calendar_ocr.py: Image-to-event OCR extraction\n- services/calendar_sync.py: Multi-source sync engine\n- web/calendar.html: Modern calendar management UI\n- add_event_example.py: Example script to add events\n- view_my_events.py: CLI tool to view events\n\nDocumentation:\n- CALENDAR_FEATURE_README.md: Feature overview\n- HOW_TO_VIEW_UI.md: UI usage guide\n- QUICKSTART_CALENDAR.md: Quick start guide\n- SETUP_COMPLETE.md: Setup instructions\n- docs/MULTI_CALENDAR_GUIDE.md: Comprehensive guide\n\nTechnical Improvements:\n- Enhanced pydantic schemas for calendar entities\n- Added calendar routes to main.py API server\n- Support for timezone-aware event handling\n- Conflict detection between overlapping events\n- Color-coded calendar sources for UI\n- Production-ready light theme design\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

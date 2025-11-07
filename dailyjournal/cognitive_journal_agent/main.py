@@ -94,6 +94,8 @@ def api_mode():
     try:
         from fastapi import FastAPI, HTTPException, File, UploadFile, Form
         from fastapi.middleware.cors import CORSMiddleware
+        from fastapi.staticfiles import StaticFiles
+        from fastapi.responses import FileResponse
         from pydantic import BaseModel
         import uvicorn
         import tempfile
@@ -119,6 +121,20 @@ def api_mode():
         allow_headers=["*"],
     )
 
+    # Serve static files
+    app.mount("/web", StaticFiles(directory=str(Path(__file__).parent / "web")), name="web")
+
+    # Serve web_ui.html at root
+    @app.get("/web_ui.html")
+    async def serve_web_ui():
+        """Serve the main web UI."""
+        return FileResponse(str(Path(__file__).parent / "web_ui.html"))
+
+    @app.get("/")
+    async def serve_root():
+        """Redirect root to web UI."""
+        return FileResponse(str(Path(__file__).parent / "web_ui.html"))
+
     # Request/Response models
     class JournalRequest(BaseModel):
         user_input: str
@@ -130,14 +146,7 @@ def api_mode():
         data: Optional[Dict[str, Any]] = None
 
     # Endpoints
-    @app.get("/")
-    async def root():
-        """Root endpoint."""
-        return {
-            "name": "Cognitive Journal Agent API",
-            "version": "1.0.0",
-            "status": "running"
-        }
+    # Root now serves web UI (defined above)
 
     @app.get("/health")
     async def health():
@@ -327,6 +336,268 @@ def api_mode():
         except Exception as e:
             import traceback
             traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/voice-command")
+    async def process_voice_command(request: dict):
+        """
+        Process a voice command using NLP parsing and route to appropriate action.
+
+        Args:
+            request: Dictionary with 'command' field containing the voice command text
+
+        Returns:
+            Command processing result
+        """
+        try:
+            command_text = request.get("command", "")
+            if not command_text:
+                raise HTTPException(status_code=400, detail="Command text is required")
+
+            # Parse the command using NLP
+            from services.nlp_parser import parse_natural_command
+
+            parsed = parse_natural_command(command_text)
+            intent = parsed.get("intent")
+            entities = parsed.get("entities", {})
+
+            # Route based on intent
+            if intent == "calendar_block" or intent == "calendar_schedule":
+                # Extract calendar event details
+                start_time = entities.get("start_time")
+                duration_minutes = entities.get("duration_minutes", 60)
+                title = entities.get("title", "Blocked Time")
+
+                if not start_time:
+                    return {
+                        "success": False,
+                        "message": "Could not parse the time from your command. Please try again."
+                    }
+
+                # Use the calendar tool
+                from tools.external_tools import CalendarManagementTool
+
+                calendar_tool = CalendarManagementTool()
+                result = calendar_tool._run(
+                    event_title=title,
+                    start_time=start_time.isoformat(),
+                    duration_minutes=duration_minutes,
+                    description=f"Created via voice command: {command_text}"
+                )
+
+                return {
+                    "success": True,
+                    "message": result,
+                    "intent": intent,
+                    "entities": {k: str(v) for k, v in entities.items()}
+                }
+
+            elif intent == "reminder":
+                # Extract reminder details
+                reminder_time = entities.get("reminder_time")
+                message = entities.get("message", command_text)
+                recipient = entities.get("recipient", "self")
+
+                if not reminder_time:
+                    return {
+                        "success": False,
+                        "message": "Could not parse the reminder time. Please specify when you want to be reminded."
+                    }
+
+                # Use the reminder tool
+                from tools.external_tools import ReminderTool
+
+                reminder_tool = ReminderTool()
+                result = reminder_tool._run(
+                    message=message,
+                    reminder_time=reminder_time.isoformat(),
+                    recipient=recipient,
+                    notification_method="browser"
+                )
+
+                return {
+                    "success": True,
+                    "message": result,
+                    "intent": intent,
+                    "entities": {k: str(v) for k, v in entities.items()}
+                }
+
+            elif intent == "note" or intent == "task":
+                # Create a journal entry with the note/task
+                result = run_agent(command_text)
+
+                return {
+                    "success": True,
+                    "message": f"{intent.title()} recorded successfully!",
+                    "intent": intent,
+                    "data": {"entry_created": True}
+                }
+
+            else:
+                # Default: create journal entry
+                result = run_agent(command_text)
+
+                return {
+                    "success": True,
+                    "message": "Journal entry created from your voice command",
+                    "intent": "journal",
+                    "data": {"entry_created": True}
+                }
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/reminders")
+    async def get_reminders(
+        status: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None
+    ):
+        """
+        Get all reminders with optional filters.
+
+        Args:
+            status: Filter by status (pending, sent, cancelled)
+            start_date: Filter by reminder_time >= start_date
+            end_date: Filter by reminder_time <= end_date
+
+        Returns:
+            List of reminders
+        """
+        try:
+            from services.reminder_system import get_reminder_system
+            from datetime import datetime
+
+            reminder_system = get_reminder_system()
+
+            # Parse dates
+            start_dt = datetime.fromisoformat(start_date) if start_date else None
+            end_dt = datetime.fromisoformat(end_date) if end_date else None
+
+            # Get reminders
+            reminders = reminder_system.get_reminders(
+                status=status,
+                start_date=start_dt,
+                end_date=end_dt
+            )
+
+            return {
+                "success": True,
+                "count": len(reminders),
+                "reminders": [r.dict() for r in reminders]
+            }
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.delete("/reminders/{reminder_id}")
+    async def cancel_reminder(reminder_id: str):
+        """
+        Cancel a pending reminder.
+
+        Args:
+            reminder_id: ID of the reminder to cancel
+
+        Returns:
+            Success status
+        """
+        try:
+            from services.reminder_system import get_reminder_system
+
+            reminder_system = get_reminder_system()
+            success = reminder_system.cancel_reminder(reminder_id)
+
+            if success:
+                return {
+                    "success": True,
+                    "message": f"Reminder {reminder_id} cancelled"
+                }
+            else:
+                raise HTTPException(status_code=404, detail="Reminder not found")
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/notifications/browser")
+    async def get_browser_notifications():
+        """
+        Get pending browser notifications (for polling).
+
+        Returns:
+            List of unread notifications
+        """
+        try:
+            import json
+            notification_file = os.path.join(
+                os.getenv("STORAGE_DIR", "./data"),
+                "browser_notifications.json"
+            )
+
+            if os.path.exists(notification_file):
+                with open(notification_file, 'r') as f:
+                    notifications = json.load(f)
+
+                # Filter unread
+                unread = [n for n in notifications if not n.get("read", False)]
+
+                return {
+                    "success": True,
+                    "count": len(unread),
+                    "notifications": unread
+                }
+            else:
+                return {
+                    "success": True,
+                    "count": 0,
+                    "notifications": []
+                }
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/notifications/browser/{notification_id}/read")
+    async def mark_notification_read(notification_id: str):
+        """
+        Mark a browser notification as read.
+
+        Args:
+            notification_id: ID of the notification
+
+        Returns:
+            Success status
+        """
+        try:
+            import json
+            notification_file = os.path.join(
+                os.getenv("STORAGE_DIR", "./data"),
+                "browser_notifications.json"
+            )
+
+            if os.path.exists(notification_file):
+                with open(notification_file, 'r') as f:
+                    notifications = json.load(f)
+
+                # Mark as read
+                for notification in notifications:
+                    if notification.get("id") == notification_id:
+                        notification["read"] = True
+                        break
+
+                # Save
+                with open(notification_file, 'w') as f:
+                    json.dump(notifications, f, indent=2)
+
+                return {"success": True, "message": "Notification marked as read"}
+            else:
+                raise HTTPException(status_code=404, detail="Notification not found")
+
+        except HTTPException:
+            raise
+        except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     # Include calendar routes

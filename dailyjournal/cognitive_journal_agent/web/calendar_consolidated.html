@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Consolidation - Cognitive Journal Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .event-card {
+            transition: all 0.2s ease;
+        }
+        .event-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .conflict-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .timeline-line {
+            position: absolute;
+            left: 60px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 52px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="../web_ui.html" class="text-2xl hover:opacity-80">←</a>
+                    <div class="text-3xl">📅</div>
+                    <div>
+                        <h1 class="text-3xl font-bold">Calendar Consolidation</h1>
+                        <p class="text-sm opacity-90">All your calendars in one view</p>
+                    </div>
+                </div>
+                <button onclick="syncAllCalendars()" class="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition">
+                    🔄 Sync All
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- Left Sidebar: Calendar Sources -->
+            <div class="lg:col-span-1 space-y-4">
+                <!-- Date Picker -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h3 class="font-bold text-gray-800 mb-3">📆 Select Date</h3>
+                    <input type="date" id="selectedDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="loadEvents()">
+                    <div class="mt-3 grid grid-cols-3 gap-2">
+                        <button onclick="setDate('today')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">Today</button>
+                        <button onclick="setDate('tomorrow')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">Tomorrow</button>
+                        <button onclick="setDate('week')" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">This Week</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Sources -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h3 class="font-bold text-gray-800 mb-3">🗂️ Calendar Sources</h3>
+                    <div id="calendarSources" class="space-y-2">
+                        <div class="text-sm text-gray-500">Loading sources...</div>
+                    </div>
+                    <button onclick="showAddSourceModal()" class="mt-3 w-full bg-purple-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-700">
+                        + Add Source
+                    </button>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-lg shadow-lg p-4">
+                    <h3 class="font-bold text-gray-800 mb-3">📊 Stats</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Events</span>
+                            <span id="statTotal" class="font-bold text-purple-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Conflicts</span>
+                            <span id="statConflicts" class="font-bold text-red-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Free Slots</span>
+                            <span id="statFree" class="font-bold text-green-600">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Area: Timeline View -->
+            <div class="lg:col-span-3 space-y-6">
+
+                <!-- Conflicts Alert -->
+                <div id="conflictsAlert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                    <div class="flex items-start">
+                        <span class="text-2xl mr-3">⚠️</span>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-red-800">Schedule Conflicts Detected</h4>
+                            <div id="conflictsList" class="mt-2 text-sm text-red-700"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline View -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">🗓️ Timeline View</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="changeView('timeline')" id="btnTimeline" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm">Timeline</button>
+                            <button onclick="changeView('list')" id="btnList" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">List</button>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Container -->
+                    <div id="timelineView" class="relative">
+                        <div id="eventsTimeline" class="space-y-4 relative">
+                            <div class="timeline-line"></div>
+                            <div class="text-center text-gray-500 py-8">
+                                Select a date to view events
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List View (Hidden by default) -->
+                    <div id="listView" class="hidden">
+                        <div id="eventsList" class="space-y-3">
+                            <div class="text-center text-gray-500 py-8">
+                                Select a date to view events
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Free Time Slots -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">⏰ Free Time Slots</h2>
+                    <div id="freeSlots" class="space-y-2">
+                        <div class="text-center text-gray-500 py-4">
+                            No data yet
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:7000';
+        let currentView = 'timeline';
+        let activeSourceIds = new Set();
+        let allEvents = [];
+        let allConflicts = [];
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeDatePicker();
+            loadCalendarSources();
+        });
+
+        function initializeDatePicker() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('selectedDate').value = today;
+            loadEvents();
+        }
+
+        function setDate(option) {
+            const dateInput = document.getElementById('selectedDate');
+            const today = new Date();
+
+            if (option === 'today') {
+                dateInput.value = today.toISOString().split('T')[0];
+            } else if (option === 'tomorrow') {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                dateInput.value = tomorrow.toISOString().split('T')[0];
+            } else if (option === 'week') {
+                // For simplicity, just set to today for week view
+                dateInput.value = today.toISOString().split('T')[0];
+            }
+
+            loadEvents();
+        }
+
+        async function loadCalendarSources() {
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sources`);
+                const data = await response.json();
+
+                if (data.success && data.sources) {
+                    renderCalendarSources(data.sources);
+                    // Select all sources by default
+                    data.sources.forEach(source => {
+                        if (source.is_active) {
+                            activeSourceIds.add(source.source_id);
+                        }
+                    });
+                    loadEvents();
+                }
+            } catch (error) {
+                console.error('Error loading calendar sources:', error);
+            }
+        }
+
+        function renderCalendarSources(sources) {
+            const container = document.getElementById('calendarSources');
+
+            if (!sources || sources.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-500">No calendar sources yet</div>';
+                return;
+            }
+
+            container.innerHTML = sources.map(source => `
+                <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-50">
+                    <input type="checkbox"
+                           ${source.is_active && activeSourceIds.has(source.source_id) ? 'checked' : ''}
+                           onchange="toggleSource('${source.source_id}')"
+                           class="form-checkbox h-4 w-4 text-purple-600">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${source.color}"></div>
+                    <span class="text-sm flex-1">${source.display_name}</span>
+                    <span class="text-xs text-gray-500">${source.source_type}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleSource(sourceId) {
+            if (activeSourceIds.has(sourceId)) {
+                activeSourceIds.delete(sourceId);
+            } else {
+                activeSourceIds.add(sourceId);
+            }
+            loadEvents();
+        }
+
+        async function loadEvents() {
+            const selectedDate = document.getElementById('selectedDate').value;
+            if (!selectedDate) return;
+
+            const startDate = `${selectedDate}T00:00:00`;
+            const endDate = `${selectedDate}T23:59:59`;
+
+            try {
+                const sourceIdsParam = Array.from(activeSourceIds).join(',');
+                const url = `${API_BASE}/calendar/events?start_date=${startDate}&end_date=${endDate}${sourceIdsParam ? '&source_ids=' + sourceIdsParam : ''}&detect_conflicts=true`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    allEvents = data.events || [];
+                    allConflicts = data.conflicts || [];
+                    renderEvents();
+                    renderConflicts();
+                    updateStats();
+                    loadFreeSlots();
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+            }
+        }
+
+        function renderEvents() {
+            if (currentView === 'timeline') {
+                renderTimelineView();
+            } else {
+                renderListView();
+            }
+        }
+
+        function renderTimelineView() {
+            const container = document.getElementById('eventsTimeline');
+
+            if (allEvents.length === 0) {
+                container.innerHTML = `
+                    <div class="timeline-line"></div>
+                    <div class="text-center text-gray-500 py-8">No events for this day</div>
+                `;
+                return;
+            }
+
+            // Sort events by start time
+            const sortedEvents = [...allEvents].sort((a, b) =>
+                new Date(a.start_time) - new Date(b.start_time)
+            );
+
+            container.innerHTML = `
+                <div class="timeline-line"></div>
+                ${sortedEvents.map((event, index) => {
+                    const startTime = new Date(event.start_time);
+                    const endTime = new Date(event.end_time);
+                    const duration = (endTime - startTime) / (1000 * 60); // minutes
+
+                    return `
+                        <div class="relative pl-20 pb-8">
+                            <div class="timeline-dot" style="background-color: ${getSourceColor(event.source_id)}; top: 8px;"></div>
+                            <div class="text-sm text-gray-500 mb-1">
+                                ${startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} -
+                                ${endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                <span class="text-xs ml-2">(${duration} min)</span>
+                            </div>
+                            <div class="event-card bg-white border-l-4 rounded-lg p-4 shadow-sm"
+                                 style="border-color: ${getSourceColor(event.source_id)}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-800">${event.title}</h4>
+                                        ${event.description ? `<p class="text-sm text-gray-600 mt-1">${event.description}</p>` : ''}
+                                        ${event.location ? `<p class="text-xs text-gray-500 mt-1">📍 ${event.location}</p>` : ''}
+                                    </div>
+                                    ${event.has_conflict ? `<span class="conflict-badge bg-red-100 text-red-700 text-xs px-2 py-1 rounded">⚠️ Conflict</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        function renderListView() {
+            const container = document.getElementById('eventsList');
+
+            if (allEvents.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">No events for this day</div>';
+                return;
+            }
+
+            const sortedEvents = [...allEvents].sort((a, b) =>
+                new Date(a.start_time) - new Date(b.start_time)
+            );
+
+            container.innerHTML = sortedEvents.map(event => {
+                const startTime = new Date(event.start_time);
+                const endTime = new Date(event.end_time);
+
+                return `
+                    <div class="event-card border-l-4 bg-white rounded-lg p-4 shadow-sm"
+                         style="border-color: ${getSourceColor(event.source_id)}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="font-semibold text-gray-800">${event.title}</h4>
+                                    ${event.has_conflict ? `<span class="conflict-badge bg-red-100 text-red-700 text-xs px-2 py-1 rounded">⚠️</span>` : ''}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    ${startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} -
+                                    ${endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                ${event.description ? `<p class="text-sm text-gray-600 mt-1">${event.description}</p>` : ''}
+                                ${event.location ? `<p class="text-xs text-gray-500 mt-1">📍 ${event.location}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderConflicts() {
+            const alert = document.getElementById('conflictsAlert');
+            const list = document.getElementById('conflictsList');
+
+            if (!allConflicts || allConflicts.length === 0) {
+                alert.classList.add('hidden');
+                return;
+            }
+
+            alert.classList.remove('hidden');
+            list.innerHTML = allConflicts.map(conflict => `
+                <div class="border-l-2 border-red-400 pl-2 mb-2">
+                    <p class="font-medium">${conflict.event1_title} overlaps with ${conflict.event2_title}</p>
+                    <p class="text-xs">${conflict.conflict_type.replace('_', ' ')}</p>
+                </div>
+            `).join('');
+        }
+
+        async function loadFreeSlots() {
+            const selectedDate = document.getElementById('selectedDate').value;
+            if (!selectedDate) return;
+
+            const startDate = `${selectedDate}T09:00:00`;
+            const endDate = `${selectedDate}T17:00:00`;
+
+            try {
+                const response = await fetch(`${API_BASE}/calendar/events/free-slots?start_date=${startDate}&end_date=${endDate}&min_duration_minutes=30&work_hours_only=true`);
+                const data = await response.json();
+
+                const container = document.getElementById('freeSlots');
+
+                if (data.success && data.free_slots && data.free_slots.length > 0) {
+                    container.innerHTML = data.free_slots.map(slot => {
+                        const start = new Date(slot.start);
+                        const end = new Date(slot.end);
+
+                        return `
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-green-800">
+                                        ${start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} -
+                                        ${end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    <span class="text-sm text-green-600">${Math.round(slot.duration_minutes)} min</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="text-center text-gray-500 py-4">No free slots available</div>';
+                }
+            } catch (error) {
+                console.error('Error loading free slots:', error);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = allEvents.length;
+            document.getElementById('statConflicts').textContent = allConflicts.length;
+        }
+
+        function changeView(view) {
+            currentView = view;
+
+            // Update buttons
+            document.getElementById('btnTimeline').className = view === 'timeline'
+                ? 'px-4 py-2 bg-purple-600 text-white rounded-lg text-sm'
+                : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm';
+
+            document.getElementById('btnList').className = view === 'list'
+                ? 'px-4 py-2 bg-purple-600 text-white rounded-lg text-sm'
+                : 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm';
+
+            // Toggle views
+            document.getElementById('timelineView').classList.toggle('hidden', view !== 'timeline');
+            document.getElementById('listView').classList.toggle('hidden', view !== 'list');
+
+            renderEvents();
+        }
+
+        function getSourceColor(sourceId) {
+            // This would ideally come from the loaded sources
+            // For now, return a default color
+            return '#4285F4';
+        }
+
+        async function syncAllCalendars() {
+            try {
+                const response = await fetch(`${API_BASE}/calendar/sync/all`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Synced ${data.events_synced} events! Detected ${data.conflicts_detected} conflicts.`);
+                    loadEvents();
+                }
+            } catch (error) {
+                console.error('Error syncing calendars:', error);
+                alert('Failed to sync calendars');
+            }
+        }
+
+        function showAddSourceModal() {
+            alert('Calendar source management UI coming soon! Use the API directly for now.');
+        }
+    </script>
+</body>
+</html>

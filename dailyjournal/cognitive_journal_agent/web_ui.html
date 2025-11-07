@@ -135,25 +135,58 @@
 
                         <!-- Voice Entry Tab -->
                         <div id="contentVoice" class="tab-content hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Voice Memo</label>
-                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition">
-                                <input type="file" id="voiceInput" accept="audio/*,.mp3,.wav,.m4a,.ogg" class="hidden" onchange="handleFileSelect('voice')">
-                                <div id="voiceDropZone" onclick="document.getElementById('voiceInput').click()" class="cursor-pointer">
-                                    <div class="text-5xl mb-3">🎤</div>
-                                    <p class="text-gray-600 mb-2">Click to upload voice memo</p>
-                                    <p class="text-sm text-gray-500">Supports: MP3, WAV, M4A, OGG</p>
-                                    <p id="voiceFileName" class="mt-2 text-sm font-medium text-purple-600"></p>
+                            <!-- Live Voice Command -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">🎙️ Live Voice Command</label>
+                                <div class="border-2 border-purple-300 rounded-lg p-6 bg-purple-50">
+                                    <div class="text-center mb-4">
+                                        <button
+                                            id="voiceLiveBtn"
+                                            onclick="toggleVoiceRecognition()"
+                                            class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-full font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg"
+                                        >
+                                            <span id="voiceLiveIcon" class="text-2xl">🎤</span>
+                                            <span id="voiceLiveText" class="ml-2">Start Listening</span>
+                                        </button>
+                                    </div>
+                                    <div id="voiceTranscript" class="hidden mt-4 p-4 bg-white rounded-lg border border-purple-200">
+                                        <p class="text-sm text-gray-600 mb-2">You said:</p>
+                                        <p id="voiceTranscriptText" class="text-gray-800 font-medium"></p>
+                                    </div>
+                                    <div id="voiceCommandResult" class="hidden mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                                        <p class="text-sm text-green-800" id="voiceCommandResultText"></p>
+                                    </div>
+                                    <div class="mt-4 text-xs text-gray-600 text-center">
+                                        <p>✨ Try commands like:</p>
+                                        <p>"Block calendar for 2-3 tomorrow for kids pickup"</p>
+                                        <p>"Remind me at 8pm to call Mr. A"</p>
+                                        <p>"Add note: finish production deployment"</p>
+                                    </div>
                                 </div>
                             </div>
-                            <button
-                                onclick="uploadFile('voice')"
-                                id="voiceUploadBtn"
-                                disabled
-                                class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <span>🎤</span>
-                                <span>Upload Voice Memo</span>
-                            </button>
+
+                            <!-- File Upload (Original) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">📁 Or Upload Voice Memo</label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition">
+                                    <input type="file" id="voiceInput" accept="audio/*,.mp3,.wav,.m4a,.ogg" class="hidden" onchange="handleFileSelect('voice')">
+                                    <div id="voiceDropZone" onclick="document.getElementById('voiceInput').click()" class="cursor-pointer">
+                                        <div class="text-5xl mb-3">📤</div>
+                                        <p class="text-gray-600 mb-2">Click to upload voice memo</p>
+                                        <p class="text-sm text-gray-500">Supports: MP3, WAV, M4A, OGG</p>
+                                        <p id="voiceFileName" class="mt-2 text-sm font-medium text-purple-600"></p>
+                                    </div>
+                                </div>
+                                <button
+                                    onclick="uploadFile('voice')"
+                                    id="voiceUploadBtn"
+                                    disabled
+                                    class="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <span>🎤</span>
+                                    <span>Upload Voice Memo</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Image Entry Tab -->
@@ -874,6 +907,139 @@
                 }
             } catch (error) {
                 showNotification('Error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ========================================
+        // Live Voice Recognition
+        // ========================================
+
+        let recognition = null;
+        let isListening = false;
+
+        function initializeVoiceRecognition() {
+            // Check for browser support
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.error('Speech recognition not supported');
+                return null;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('voiceLiveIcon').textContent = '🔴';
+                document.getElementById('voiceLiveText').textContent = 'Listening...';
+                document.getElementById('voiceLiveBtn').classList.add('animate-pulse');
+                document.getElementById('voiceTranscript').classList.add('hidden');
+                document.getElementById('voiceCommandResult').classList.add('hidden');
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                console.log('Transcript:', transcript);
+
+                // Show transcript
+                document.getElementById('voiceTranscriptText').textContent = transcript;
+                document.getElementById('voiceTranscript').classList.remove('hidden');
+
+                // Process the command
+                processVoiceCommand(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                resetVoiceButton();
+
+                if (event.error === 'not-allowed') {
+                    alert('Microphone access denied. Please allow microphone access to use voice commands.');
+                } else {
+                    showNotification('Voice recognition error: ' + event.error, 'error');
+                }
+            };
+
+            recognition.onend = function() {
+                resetVoiceButton();
+            };
+
+            return recognition;
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                recognition = initializeVoiceRecognition();
+                if (!recognition) {
+                    alert('Voice recognition is not supported in your browser. Try Chrome or Edge.');
+                    return;
+                }
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Failed to start recognition:', error);
+                }
+            }
+        }
+
+        function resetVoiceButton() {
+            isListening = false;
+            document.getElementById('voiceLiveIcon').textContent = '🎤';
+            document.getElementById('voiceLiveText').textContent = 'Start Listening';
+            document.getElementById('voiceLiveBtn').classList.remove('animate-pulse');
+        }
+
+        async function processVoiceCommand(text) {
+            showLoading(true);
+
+            try {
+                // Send to the voice command API endpoint
+                const response = await fetch(`${API_BASE}/voice-command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: text
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show result
+                    const resultEl = document.getElementById('voiceCommandResult');
+                    const resultTextEl = document.getElementById('voiceCommandResultText');
+
+                    if (data.message) {
+                        resultTextEl.textContent = data.message;
+                    } else {
+                        resultTextEl.textContent = 'Command processed successfully!';
+                    }
+
+                    resultEl.classList.remove('hidden');
+
+                    // Reload entries and actions if needed
+                    setTimeout(() => {
+                        loadEntries();
+                        loadActions();
+                    }, 500);
+                } else {
+                    showNotification('Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error processing voice command:', error);
+                showNotification('Error processing voice command: ' + error.message, 'error');
             } finally {
                 showLoading(false);
             }
