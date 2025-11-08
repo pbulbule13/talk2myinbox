@@ -2,7 +2,7 @@
  * Enhanced Communications with Better Categorization, Draft Management, and Calendar
  */
 
-const COMM_API = (window.DASHBOARD_CONFIG?.api?.baseUrl) || 'http://localhost:8000';
+const COMM_API = (window.DASHBOARD_CONFIG?.api?.baseUrl) || 'http://localhost:8888';
 
 // Global state
 window.communicationsState = {
@@ -571,7 +571,15 @@ function renderEmailList() {
     const category = window.communicationsState.currentCategory;
 
     let filteredEmails = window.communicationsState.emails;
-    if (category !== 'all') {
+    if (category === 'conversations') {
+        // Filter emails that are part of conversations with 2+ messages
+        filteredEmails = filteredEmails.filter(email => {
+            const thread = window.communicationsState.threads?.find(t =>
+                t.emails.some(e => e.id === email.id)
+            );
+            return thread && thread.messageCount >= 2;
+        });
+    } else if (category !== 'all') {
         filteredEmails = filteredEmails.filter(email => email.category === category);
     }
 
@@ -757,28 +765,46 @@ function draftReply() {
  */
 async function draftReplyForEmail(emailId) {
     const email = window.communicationsState.emails.find(e => e.id === emailId);
-    if (!email) return;
+    if (!email) {
+        console.error('[Draft] Email not found:', emailId);
+        showNotification('Email not found', 'error');
+        return;
+    }
 
     console.log('[Draft] Generating draft reply for:', emailId);
+    console.log('[Draft] Using API endpoint:', `${COMM_API}/voice-agent/draft-reply`);
+
+    // Show loading notification
+    showNotification('Generating AI draft reply...', 'info');
 
     try {
         // Call AI to generate draft
+        const requestData = {
+            email_id: emailId,
+            email_subject: email.subject,
+            email_body: email.body || email.preview,
+            email_from: email.from
+        };
+
+        console.log('[Draft] Request data:', requestData);
+
         const response = await fetch(`${COMM_API}/voice-agent/draft-reply`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email_id: emailId,
-                email_subject: email.subject,
-                email_body: email.body || email.preview,
-                email_from: email.from
-            })
+            body: JSON.stringify(requestData)
         });
 
+        console.log('[Draft] Response status:', response.status);
+
         if (!response.ok) {
-            throw new Error(`Failed to generate draft: ${response.status}`);
+            const errorText = await response.text();
+            console.error('[Draft] Server error:', errorText);
+            throw new Error(`Failed to generate draft: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('[Draft] Response data:', data);
+
         const draft = {
             id: `draft_${Date.now()}`,
             email_id: emailId,
@@ -788,6 +814,8 @@ async function draftReplyForEmail(emailId) {
             timestamp: new Date().toISOString()
         };
 
+        console.log('[Draft] Created draft:', draft);
+
         // Add to drafts
         window.communicationsState.drafts.push(draft);
         renderDraftsList();
@@ -795,9 +823,11 @@ async function draftReplyForEmail(emailId) {
         // Open draft editor
         openDraftEditor(draft);
 
+        showNotification('Draft reply generated successfully!', 'success');
+
     } catch (error) {
         console.error('[Draft] Error generating draft:', error);
-        showNotification('Failed to generate draft. Please try again.', 'error');
+        showNotification(`Failed to generate draft: ${error.message}`, 'error');
     }
 }
 
@@ -808,6 +838,12 @@ function renderDraftsList() {
     const draftsList = document.getElementById('drafts-list');
     const draftsCount = document.getElementById('drafts-count');
     const drafts = window.communicationsState.drafts;
+
+    // Safety check - if elements don't exist, skip rendering
+    if (!draftsList || !draftsCount) {
+        console.log('[Drafts] Drafts UI elements not found, skipping render');
+        return;
+    }
 
     draftsCount.textContent = drafts.length;
 
@@ -866,6 +902,7 @@ function openDraftEditor(draftIdOrObject) {
 function closeDraftEditor() {
     document.getElementById('draft-editor-modal').classList.add('hidden');
     window.communicationsState.selectedDraft = null;
+    clearDraftAttachments(); // Clear attachments when closing
 }
 
 /**
@@ -895,19 +932,46 @@ async function approveSendDraft() {
     draft.subject = document.getElementById('draft-subject').value;
     draft.body = document.getElementById('draft-body').value;
 
-    showConfirmDialog(`Send email to ${draft.to}?`, async () => {
+    const attachmentCount = window.draftAttachments.length;
+    const confirmMsg = attachmentCount > 0
+        ? `Send email to ${draft.to} with ${attachmentCount} attachment(s)?`
+        : `Send email to ${draft.to}?`;
+
+    showConfirmDialog(confirmMsg, async () => {
         try {
             console.log('[Send] Sending email:', draft);
+            console.log('[Send] Attachments:', window.draftAttachments.map(f => f.name));
 
-            const response = await fetch(`${COMM_API}/voice-agent/send-email`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: draft.to,
-                    subject: draft.subject,
-                    body: draft.body
-                })
-            });
+            // Use FormData if attachments are present
+            let response;
+            if (window.draftAttachments.length > 0) {
+                const formData = new FormData();
+                formData.append('to', draft.to);
+                formData.append('subject', draft.subject);
+                formData.append('body', draft.body);
+
+                // Add each attachment
+                window.draftAttachments.forEach((file, index) => {
+                    formData.append(`attachments`, file);
+                    console.log(`[Send] Adding attachment ${index + 1}: ${file.name}`);
+                });
+
+                response = await fetch(`${COMM_API}/voice-agent/send-email`, {
+                    method: 'POST',
+                    body: formData // FormData handles multipart/form-data automatically
+                });
+            } else {
+                // No attachments, use JSON
+                response = await fetch(`${COMM_API}/voice-agent/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: draft.to,
+                        subject: draft.subject,
+                        body: draft.body
+                    })
+                });
+            }
 
             if (!response.ok) {
                 throw new Error(`Failed to send email: ${response.status}`);
@@ -916,7 +980,7 @@ async function approveSendDraft() {
             // Remove from drafts
             window.communicationsState.drafts = window.communicationsState.drafts.filter(d => d.id !== draft.id);
             renderDraftsList();
-            closeDraftEditor();
+            closeDraftEditor(); // This will also clear attachments
 
             showNotification('Email sent successfully!', 'success');
 
@@ -1004,8 +1068,17 @@ function updateCategoryBadges() {
     // Count all
     document.getElementById('badge-all').textContent = emails.length;
 
+    // Count conversations (emails with 2+ messages in thread)
+    const conversationEmails = emails.filter(email => {
+        const thread = window.communicationsState.threads?.find(t =>
+            t.emails.some(e => e.id === email.id)
+        );
+        return thread && thread.messageCount >= 2;
+    });
+
     // Count by category
     const counts = {
+        conversations: conversationEmails.length,
         human: emails.filter(e => e.isHuman).length,
         automated: emails.filter(e => !e.isHuman).length,
         urgent: emails.filter(e => e.category === 'urgent').length,
@@ -1856,6 +1929,108 @@ function filterInboxByCategory(category) {
     }
 
     showNotification(`Showing ${filteredEmails.length} ${categoryLabel.toLowerCase()}`, 'success');
+}
+
+/**
+ * Handle file selection for draft attachments
+ */
+window.draftAttachments = []; // Global storage for attachments
+
+function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    const maxSize = 25 * 1024 * 1024; // 25MB limit per file
+
+    console.log(`[Attachments] Selected ${files.length} file(s)`);
+
+    for (const file of files) {
+        // Check file size
+        if (file.size > maxSize) {
+            showNotification(`File "${file.name}" is too large. Max size is 25MB.`, 'error');
+            continue;
+        }
+
+        // Check if file already added
+        if (window.draftAttachments.some(f => f.name === file.name && f.size === file.size)) {
+            showNotification(`File "${file.name}" is already attached.`, 'info');
+            continue;
+        }
+
+        // Add file to attachments
+        window.draftAttachments.push(file);
+        console.log(`[Attachments] Added: ${file.name} (${formatFileSize(file.size)})`);
+    }
+
+    // Update display
+    renderAttachmentsList();
+
+    // Clear file input for re-selection
+    event.target.value = '';
+}
+
+/**
+ * Render the list of attached files
+ */
+function renderAttachmentsList() {
+    const listContainer = document.getElementById('draft-attachments-list');
+
+    if (window.draftAttachments.length === 0) {
+        listContainer.innerHTML = '';
+        return;
+    }
+
+    const attachmentsHTML = window.draftAttachments.map((file, index) => `
+        <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded p-2">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="text-lg">📎</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold text-gray-900 truncate">${escapeHtml(file.name)}</div>
+                    <div class="text-xs text-gray-500">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button onclick="removeAttachment(${index})"
+                    class="text-red-600 hover:text-red-800 px-2 py-1 text-sm font-semibold"
+                    title="Remove attachment">
+                ✕
+            </button>
+        </div>
+    `).join('');
+
+    listContainer.innerHTML = attachmentsHTML;
+    console.log(`[Attachments] Displaying ${window.draftAttachments.length} attachment(s)`);
+}
+
+/**
+ * Remove an attachment from the list
+ */
+function removeAttachment(index) {
+    const file = window.draftAttachments[index];
+    console.log(`[Attachments] Removing: ${file.name}`);
+
+    window.draftAttachments.splice(index, 1);
+    renderAttachmentsList();
+
+    showNotification(`Removed "${file.name}"`, 'success');
+}
+
+/**
+ * Format file size for display
+ */
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Clear all attachments when draft editor is closed
+ */
+function clearDraftAttachments() {
+    window.draftAttachments = [];
+    renderAttachmentsList();
 }
 
 // Initialize on page load

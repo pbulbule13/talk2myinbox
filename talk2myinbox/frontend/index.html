@@ -151,8 +151,8 @@
         <!-- Main Grid Layout -->
         <div class="grid grid-cols-12 gap-4">
 
-            <!-- LEFT SIDEBAR: AI Assistant (3 cols) -->
-            <div class="col-span-3">
+            <!-- LEFT SIDEBAR: AI Assistant + Calendar (3 cols) -->
+            <div class="col-span-3 space-y-4">
                 <!-- AI Assistant -->
                 <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg p-1">
                     <div class="bg-white rounded-md p-4 flex flex-col" style="height: 50vh;">
@@ -161,18 +161,33 @@
                             <h3 class="font-bold text-gray-900 text-lg">🎙️ AI Assistant</h3>
                             <div class="flex gap-1">
                                 <button id="mode-text" onclick="switchVoiceMode('text')"
-                                    class="px-2 py-1 rounded text-xs font-semibold bg-indigo-600 text-white" title="Text Mode">
-                                    ⌨️
+                                    class="px-3 py-1.5 rounded text-xs font-semibold bg-indigo-600 text-white shadow-sm transition-all hover:bg-indigo-700" title="Text Mode">
+                                    ⌨️ Text
                                 </button>
                                 <button id="mode-semi-voice" onclick="switchVoiceMode('semi-voice')"
-                                    class="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300" title="Semi-Voice Mode">
-                                    🔊
+                                    class="px-3 py-1.5 rounded text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all" title="Semi-Voice Mode">
+                                    🔊 Semi
                                 </button>
                                 <button id="mode-full-voice" onclick="switchVoiceMode('full-voice')"
-                                    class="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300" title="Full-Voice Mode">
-                                    🎤
+                                    class="px-3 py-1.5 rounded text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-sm" title="Full-Voice Mode - Talk & Listen">
+                                    🎤 Voice
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Continuous Mode Toggle -->
+                        <div id="continuous-mode-controls" class="mb-3 p-2 bg-indigo-50 rounded border border-indigo-200" style="display: none;">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span id="continuous-mode-indicator" class="w-2 h-2 rounded-full bg-gray-400"></span>
+                                    <span class="text-xs font-semibold text-gray-700">Continuous Voice Mode</span>
+                                </div>
+                                <button id="continuous-mode-toggle" onclick="toggleContinuousMode()"
+                                    class="px-3 py-1 rounded text-xs font-semibold bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors">
+                                    OFF
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-1">Auto-restarts listening after each response</p>
                         </div>
 
                         <!-- Quick Voice Input -->
@@ -185,6 +200,9 @@
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-semibold">
                                 →
                             </button>
+                            <button id="voice-mic-button" onclick="startVoiceRecording()" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold shadow-lg">
+                                🎤 Speak
+                            </button>
                         </div>
 
                         <!-- Status -->
@@ -196,6 +214,32 @@
                         <div id="voice-chat-area" class="bg-gray-50 rounded p-3 flex-1 overflow-y-auto text-sm border border-gray-200">
                             <p class="text-gray-500 text-center py-4">Chat history appears here</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Widget -->
+                <div class="bg-white rounded-lg shadow border border-gray-200">
+                    <div class="p-3 border-b border-gray-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-gray-900 text-sm">📅 Calendar</h3>
+                            <button onclick="refreshCalendar()" class="text-xs text-blue-600 hover:text-blue-700">
+                                🔄
+                            </button>
+                        </div>
+                        <!-- Day/Week Toggle -->
+                        <div class="flex gap-1">
+                            <button id="cal-day" onclick="switchCalendarView('day')"
+                                    class="flex-1 px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded">
+                                📆 Day
+                            </button>
+                            <button id="cal-week" onclick="switchCalendarView('week')"
+                                    class="flex-1 px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                                📅 Week
+                            </button>
+                        </div>
+                    </div>
+                    <div id="calendar-list" class="p-3 max-h-[250px] overflow-y-auto space-y-2">
+                        <div class="text-center text-xs text-gray-500 py-4">Loading events...</div>
                     </div>
                 </div>
             </div>
@@ -225,6 +269,10 @@
                             <button onclick="switchCategory('all')" id="cat-all"
                                 class="category-tab px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 transition-all">
                                 All <span id="badge-all" class="ml-1 bg-white px-1.5 rounded-full">0</span>
+                            </button>
+                            <button onclick="switchCategory('conversations')" id="cat-conversations"
+                                class="category-tab px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-indigo-50 transition-all">
+                                💬 Conversations <span id="badge-conversations" class="ml-1 bg-white px-1.5 rounded-full">0</span>
                             </button>
                             <button onclick="switchCategory('human')" id="cat-human"
                                 class="category-tab px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-blue-50 transition-all">
@@ -279,6 +327,18 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Message:</label>
                                 <textarea id="draft-body" class="w-full px-3 py-2 border border-gray-300 rounded text-sm draft-editor"></textarea>
                             </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Attachments:</label>
+                                <div class="flex gap-2">
+                                    <input type="file" id="draft-file-input" multiple class="hidden" onchange="handleFileSelect(event)">
+                                    <button onclick="document.getElementById('draft-file-input').click()"
+                                            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-semibold border border-gray-300 flex items-center gap-2">
+                                        📎 Add Files
+                                    </button>
+                                    <span class="text-xs text-gray-500 self-center">Max 25MB per file</span>
+                                </div>
+                                <div id="draft-attachments-list" class="mt-2 space-y-2"></div>
+                            </div>
                         </div>
                         <div class="p-4 border-t border-gray-200 flex gap-2">
                             <button onclick="approveSendDraft()" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold">
@@ -313,32 +373,6 @@
                         <div class="text-center text-gray-500 py-2">
                             Loading...
                         </div>
-                    </div>
-                </div>
-
-                <!-- Calendar Widget -->
-                <div class="bg-white rounded-lg shadow border border-gray-200">
-                    <div class="p-3 border-b border-gray-200">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-bold text-gray-900 text-sm">📅 Calendar</h3>
-                            <button onclick="refreshCalendar()" class="text-xs text-blue-600 hover:text-blue-700">
-                                🔄
-                            </button>
-                        </div>
-                        <!-- Day/Week Toggle -->
-                        <div class="flex gap-1">
-                            <button id="cal-day" onclick="switchCalendarView('day')"
-                                    class="flex-1 px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded">
-                                📆 Day
-                            </button>
-                            <button id="cal-week" onclick="switchCalendarView('week')"
-                                    class="flex-1 px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
-                                📅 Week
-                            </button>
-                        </div>
-                    </div>
-                    <div id="calendar-list" class="p-3 max-h-[250px] overflow-y-auto space-y-2">
-                        <div class="text-center text-xs text-gray-500 py-4">Loading events...</div>
                     </div>
                 </div>
 
@@ -544,7 +578,7 @@
 
     <!-- Load JavaScript Modules -->
     <script src="/static/support.js"></script>
-    <script src="/static/communications_enhanced.js"></script>
-    <script src="/static/voice_module.js"></script>
+    <script src="/static/communications_enhanced.js?v=3.0"></script>
+    <script src="/static/voice_module.js?v=3.0"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
  * Supports 3 modes: Text, Semi-Voice, Full-Voice
  */
 
-const VOICE_API = (window.DASHBOARD_CONFIG?.api?.baseUrl) || 'http://localhost:8000';
+const VOICE_API = (window.DASHBOARD_CONFIG?.api?.baseUrl) || 'http://localhost:8888';
 
 // Voice state management
 window.voiceState = {
@@ -13,7 +13,8 @@ window.voiceState = {
     recognition: null,
     mediaRecorder: null,
     audioChunks: [],
-    currentAudio: null
+    currentAudio: null,
+    continuousMode: false // Auto-restart listening after response in full-voice
 };
 
 /**
@@ -69,9 +70,77 @@ function switchVoiceMode(mode) {
     // Update UI
     updateModeButtons(mode);
     updateVoicePanel(mode);
+    updateContinuousModeVisibility(mode);
 
     // Show mode-specific instructions
     showModeInstructions(mode);
+}
+
+/**
+ * Update continuous mode controls visibility
+ */
+function updateContinuousModeVisibility(mode) {
+    const controls = document.getElementById('continuous-mode-controls');
+    if (!controls) return;
+
+    // Show continuous mode controls only in full-voice mode
+    if (mode === 'full-voice') {
+        controls.style.display = 'block';
+    } else {
+        controls.style.display = 'none';
+        // Disable continuous mode when switching away from full-voice
+        if (window.voiceState.continuousMode) {
+            toggleContinuousMode();
+        }
+    }
+}
+
+/**
+ * Toggle continuous voice mode on/off
+ */
+function toggleContinuousMode() {
+    window.voiceState.continuousMode = !window.voiceState.continuousMode;
+
+    const toggleBtn = document.getElementById('continuous-mode-toggle');
+    const indicator = document.getElementById('continuous-mode-indicator');
+
+    if (!toggleBtn || !indicator) return;
+
+    console.log(`[Voice] Continuous mode: ${window.voiceState.continuousMode ? 'ON' : 'OFF'}`);
+
+    if (window.voiceState.continuousMode) {
+        // Enable continuous mode
+        toggleBtn.textContent = 'ON';
+        toggleBtn.classList.remove('bg-gray-300', 'text-gray-700');
+        toggleBtn.classList.add('bg-green-500', 'text-white');
+
+        // Pulsing animation for indicator
+        indicator.classList.remove('bg-gray-400');
+        indicator.classList.add('bg-green-500', 'animate-pulse');
+
+        updateVoiceStatus('Continuous mode enabled - listening will auto-restart', 'success');
+
+        // Auto-start listening if not already recording
+        if (!window.voiceState.isRecording && !window.voiceState.isPlaying) {
+            setTimeout(() => startVoiceRecording(), 500);
+        }
+    } else {
+        // Disable continuous mode
+        toggleBtn.textContent = 'OFF';
+        toggleBtn.classList.remove('bg-green-500', 'text-white');
+        toggleBtn.classList.add('bg-gray-300', 'text-gray-700');
+
+        // Stop pulsing animation
+        indicator.classList.remove('bg-green-500', 'animate-pulse');
+        indicator.classList.add('bg-gray-400');
+
+        updateVoiceStatus('Continuous mode disabled', 'info');
+
+        // Stop recording if currently active
+        if (window.voiceState.isRecording) {
+            stopRecording();
+        }
+    }
 }
 
 /**
@@ -84,11 +153,18 @@ function updateModeButtons(activeMode) {
         const btn = document.getElementById(`mode-${mode}`);
         if (btn) {
             if (mode === activeMode) {
-                btn.classList.add('bg-indigo-600', 'text-white');
-                btn.classList.remove('bg-gray-100', 'text-gray-700');
+                // Active mode styling
+                if (mode === 'full-voice') {
+                    btn.classList.add('bg-green-600', 'text-white', 'shadow-lg', 'ring-2', 'ring-green-300');
+                    btn.classList.remove('bg-gray-200', 'text-gray-700', 'bg-indigo-600');
+                } else {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+                    btn.classList.remove('bg-gray-200', 'text-gray-700', 'bg-green-600', 'ring-2', 'ring-green-300');
+                }
             } else {
-                btn.classList.remove('bg-indigo-600', 'text-white');
-                btn.classList.add('bg-gray-100', 'text-gray-700');
+                // Inactive mode styling
+                btn.classList.remove('bg-indigo-600', 'bg-green-600', 'text-white', 'shadow-lg', 'ring-2', 'ring-green-300');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
             }
         }
     });
@@ -186,8 +262,16 @@ async function submitTextQuery() {
         updateVoiceStatus('Response received', 'success');
 
         // If semi-voice or full-voice mode, speak the response
+        console.log(`[Voice] Current mode: ${window.voiceState.mode}`);
         if (window.voiceState.mode === 'semi-voice' || window.voiceState.mode === 'full-voice') {
-            await speakText(responseText);
+            console.log(`[Voice] ${window.voiceState.mode} mode detected - calling speakText...`);
+            try {
+                await speakText(responseText);
+                console.log('[Voice] TTS completed successfully');
+            } catch (ttsError) {
+                console.error('[Voice] TTS Error:', ttsError);
+                updateVoiceStatus(`Voice playback failed: ${ttsError.message}`, 'error');
+            }
         }
 
         // Handle any actions in the response
@@ -409,8 +493,18 @@ async function handleVoiceInput(transcript) {
         showQueryInChat(responseText, 'assistant');
 
         // Speak the response in full-voice mode
+        console.log(`[Voice] Current mode: ${window.voiceState.mode}`);
         if (window.voiceState.mode === 'full-voice') {
-            await speakText(responseText);
+            console.log('[Voice] Full voice mode detected - calling speakText...');
+            try {
+                await speakText(responseText);
+                console.log('[Voice] TTS completed successfully');
+            } catch (ttsError) {
+                console.error('[Voice] TTS Error:', ttsError);
+                updateVoiceStatus(`Voice playback failed: ${ttsError.message}`, 'error');
+            }
+        } else {
+            console.log('[Voice] Not in full-voice mode, skipping TTS');
         }
 
         updateVoiceStatus('Ready for next query', 'success');
@@ -427,9 +521,14 @@ async function handleVoiceInput(transcript) {
  * Convert text to speech using ElevenLabs
  */
 async function speakText(text) {
-    if (!text) return;
+    if (!text) {
+        console.warn('[Voice] speakText called with empty text');
+        return;
+    }
 
-    console.log('[Voice] Speaking text:', text.substring(0, 50) + '...');
+    console.log('[Voice] ===== STARTING TTS =====');
+    console.log('[Voice] Text to speak:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
+    console.log('[Voice] API URL:', `${VOICE_API}/voice-agent/tts`);
 
     // Stop any current playback
     stopAudioPlayback();
@@ -437,49 +536,81 @@ async function speakText(text) {
     updateVoiceStatus('Generating speech...', 'loading');
 
     try {
+        console.log('[Voice] Calling TTS API...');
         const response = await fetch(`${VOICE_API}/voice-agent/tts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text })
         });
 
+        console.log('[Voice] TTS API response status:', response.status);
+
         if (!response.ok) {
-            throw new Error(`TTS Error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('[Voice] TTS API error response:', errorText);
+            throw new Error(`TTS Error: ${response.status} - ${errorText}`);
         }
 
+        console.log('[Voice] Received audio blob from TTS API');
         const audioBlob = await response.blob();
+        console.log('[Voice] Audio blob size:', audioBlob.size, 'bytes');
+
+        if (audioBlob.size === 0) {
+            throw new Error('Received empty audio blob from TTS API');
+        }
+
         const audioUrl = URL.createObjectURL(audioBlob);
+        console.log('[Voice] Created audio URL:', audioUrl);
 
         const audio = new Audio(audioUrl);
         window.voiceState.currentAudio = audio;
         window.voiceState.isPlaying = true;
 
         audio.onplay = () => {
+            console.log('[Voice] ✓ Audio playback STARTED');
             updateVoiceStatus('Playing response...', 'playing');
             updateAudioButton(true);
         };
 
         audio.onended = () => {
-            console.log('[Voice] Audio playback finished');
+            console.log('[Voice] ✓ Audio playback FINISHED');
             window.voiceState.isPlaying = false;
-            updateVoiceStatus('Ready for next query', 'success');
             updateAudioButton(false);
+
+            // Auto-restart listening in full-voice continuous mode
+            if (window.voiceState.mode === 'full-voice' && window.voiceState.continuousMode) {
+                setTimeout(() => {
+                    console.log('[Voice] Restarting listening in continuous mode...');
+                    startVoiceRecording();
+                }, 500); // Small delay before restarting
+            } else {
+                updateVoiceStatus('Ready for next query', 'success');
+            }
             URL.revokeObjectURL(audioUrl);
         };
 
         audio.onerror = (error) => {
-            console.error('[Voice] Audio playback error:', error);
+            console.error('[Voice] ✗ Audio playback error:', error);
+            console.error('[Voice] Audio error event:', error.target?.error);
             updateVoiceStatus('Audio playback failed', 'error');
             window.voiceState.isPlaying = false;
             updateAudioButton(false);
+            URL.revokeObjectURL(audioUrl);
         };
 
+        console.log('[Voice] Starting audio playback...');
         await audio.play();
+        console.log('[Voice] Audio.play() promise resolved');
 
     } catch (error) {
-        console.error('[Voice] TTS error:', error);
+        console.error('[Voice] ✗ TTS error:', error);
+        console.error('[Voice] Error stack:', error.stack);
         updateVoiceStatus(`Speech generation failed: ${error.message}`, 'error');
         window.voiceState.isPlaying = false;
+
+        // Show user-friendly error message
+        showQueryInChat(`Failed to generate voice: ${error.message}. Check console for details.`, 'error');
+        throw error; // Re-throw so caller knows it failed
     }
 }
 
@@ -587,7 +718,8 @@ function showQueryInChat(text, sender) {
     if (!chatArea) return;
 
     const messageEl = document.createElement('div');
-    messageEl.className = `mb-3 ${sender === 'user' ? 'text-right' : 'text-left'}`;
+    // All messages left-aligned for better readability
+    messageEl.className = 'mb-3 text-left';
 
     const bubbleClass = sender === 'user'
         ? 'bg-indigo-600 text-white'
@@ -595,8 +727,14 @@ function showQueryInChat(text, sender) {
         ? 'bg-red-100 text-red-800'
         : 'bg-gray-100 text-gray-800';
 
+    // Add label for clarity
+    const label = sender === 'user' ? '👤 You:' : sender === 'error' ? '⚠️ Error:' : '🤖 AI:';
+
     messageEl.innerHTML = `
-        <div class="inline-block ${bubbleClass} px-4 py-2 rounded-lg max-w-[80%] text-sm">
+        <div class="text-xs font-semibold mb-1 ${sender === 'user' ? 'text-indigo-600' : sender === 'error' ? 'text-red-600' : 'text-gray-600'}">
+            ${label}
+        </div>
+        <div class="inline-block ${bubbleClass} px-4 py-2 rounded-lg max-w-[90%] text-sm">
             ${escapeHtml(text)}
         </div>
     `;

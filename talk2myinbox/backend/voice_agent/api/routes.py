@@ -275,7 +275,28 @@ async def process_query(request: QueryRequest):
                 emails_needing_reply.append(email)
 
         # Create enhanced prompt for LLM to answer the query
-        prompt = f"""USER QUESTION: {request.query}
+        # For voice mode, keep responses ultra-concise (1 sentence max)
+        if request.mode == "voice":
+            prompt = f"""USER QUESTION: {request.query}
+
+EMAIL ANALYSIS:
+- Total emails: {len(threads)}
+- Unread emails: {len(unread_emails)}
+- Emails from humans: {len(emails_from_humans)}
+- Urgent/priority emails: {len(urgent_emails)}
+- Emails likely needing reply (unread from humans): {len(emails_needing_reply)}
+
+TASK: Answer in ONE SHORT SENTENCE (max 15 words). Be direct and concise for voice output.
+
+Examples:
+- "You have 5 unread emails from humans"
+- "3 urgent emails need your attention"
+- "You have 2 meetings today"
+
+ANSWER:"""
+            max_tokens_limit = 50
+        else:
+            prompt = f"""USER QUESTION: {request.query}
 
 {email_context}{calendar_context}
 
@@ -298,10 +319,11 @@ For questions about:
 Provide a direct, conversational answer in 2-4 sentences. Include specific numbers and details.
 
 ANSWER:"""
+            max_tokens_limit = 500
 
         # Use LLM to answer the query
-        print("[Query] Calling LLM to answer question...")
-        answer = call_llm_with_fallback(prompt, max_tokens=500, temperature=0.3)
+        print(f"[Query] Calling LLM to answer question (mode: {request.mode})...")
+        answer = call_llm_with_fallback(prompt, max_tokens=max_tokens_limit, temperature=0.3)
 
         # Determine intent based on query keywords
         intent = "unknown"
@@ -847,8 +869,13 @@ async def get_config():
     }
 
 
+class TTSRequest(BaseModel):
+    """Request model for TTS"""
+    text: str
+
+
 @router.post("/tts")
-async def text_to_speech(request: dict):
+async def text_to_speech(request: TTSRequest):
     """
     Convert text to speech using ElevenLabs API.
 
@@ -861,26 +888,39 @@ async def text_to_speech(request: dict):
     import os
     from elevenlabs.client import ElevenLabs
     from fastapi.responses import Response
+    import traceback
 
     try:
-        text = request.get("text", "")
+        print("[TTS] ===== TTS ENDPOINT CALLED =====")
+        print(f"[TTS] Request data: {request}")
+
+        text = request.text
+        print(f"[TTS] Text to convert: '{text}'")
+
         if not text:
+            print("[TTS] ERROR: No text provided")
             raise HTTPException(status_code=400, detail="No text provided")
 
         # Get API key and voice ID from environment
         api_key = os.getenv("ELEVENLABS_API_KEY")
         voice_id = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
 
+        print(f"[TTS] API Key: {'***' + api_key[-10:] if api_key else 'NOT FOUND'}")
+        print(f"[TTS] Voice ID: {voice_id}")
+
         if not api_key:
+            print("[TTS] ERROR: ElevenLabs API key not configured")
             raise HTTPException(
                 status_code=500,
                 detail="ElevenLabs API key not configured"
             )
 
         # Initialize ElevenLabs client
+        print("[TTS] Initializing ElevenLabs client...")
         client = ElevenLabs(api_key=api_key)
 
         # Generate speech using the new API
+        print("[TTS] Calling text_to_speech.convert()...")
         audio_generator = client.text_to_speech.convert(
             text=text,
             voice_id=voice_id,
@@ -888,7 +928,9 @@ async def text_to_speech(request: dict):
         )
 
         # Convert generator to bytes
+        print("[TTS] Converting audio generator to bytes...")
         audio_bytes = b"".join(audio_generator)
+        print(f"[TTS] SUCCESS! Generated {len(audio_bytes)} bytes of audio")
 
         # Return audio as MP3
         return Response(
@@ -899,7 +941,12 @@ async def text_to_speech(request: dict):
             }
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"[TTS] ERROR: {str(e)}")
+        print(f"[TTS] Error type: {type(e).__name__}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"TTS error: {str(e)}")
 
 
