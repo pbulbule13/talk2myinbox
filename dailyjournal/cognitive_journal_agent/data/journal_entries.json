@@ -1,0 +1,580 @@
+[
+  {
+    "timestamp": "2025-11-03T15:03:19.889545",
+    "input_type": "text_note",
+    "raw_content": "Had a productive morning meeting with the team about Q4 goals. Need to send follow-up email to Sarah.",
+    "source_id": "text_81651b0f-de4a-419d-9afc-92f7f7072395",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Need to send follow-up email to Sarah"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-03T15:03:49.529029",
+    "input_type": "text_note",
+    "raw_content": "Had a productive morning meeting with the team about Q4 goals. Need to send follow-up email to Sarah.",
+    "source_id": "text_14e01824-213b-462a-b3cf-d615b6a3776f",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Need to send follow-up email to Sarah"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-03T15:03:49.561472",
+    "input_type": "text_note",
+    "raw_content": "Feeling stressed about the upcoming project deadline next Friday. Should block out time for deep work.",
+    "source_id": "text_64f1b20d-51f9-44af-bff0-9e36c6d267cc",
+    "contextual_tags": [
+      "Urgent"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Stressed"
+  },
+  {
+    "timestamp": "2025-11-03T15:03:49.584338",
+    "input_type": "text_note",
+    "raw_content": "Great idea: Create a new feature for automatic task prioritization in the app.",
+    "source_id": "text_1c47095f-c578-4d44-96aa-391a8344df86",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Great idea: Create a new feature for automatic task prioritization in the app"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T15:03:49.614806",
+    "input_type": "text_note",
+    "raw_content": "Lunch meeting with John went well. He suggested we collaborate on the ML project.",
+    "source_id": "text_a73645ce-7690-49f5-a471-83e5b74ed6e9",
+    "contextual_tags": [
+      "Personal"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Routine"
+  },
+  {
+    "timestamp": "2025-11-03T15:04:11.756252",
+    "input_type": "text_note",
+    "raw_content": "Met with the design team and discussed the new UI mockups for the mobile app. They look great!",
+    "source_id": "text_9cb29280-db42-4569-a184-f09896ffccd8",
+    "contextual_tags": [
+      "Personal"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T15:06:12.790159",
+    "input_type": "text_note",
+    "raw_content": "Today I completed the database migration successfully. The team is happy with the results\\!",
+    "source_id": "text_0dbd896d-4f0b-4887-8f7e-33c855c966b4",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Today I completed the database migration successfully"
+    ],
+    "inferred_emotion": "Routine"
+  },
+  {
+    "timestamp": "2025-11-03T15:06:23.058134",
+    "input_type": "text_note",
+    "raw_content": "Just finished a great coding session! Implemented the new authentication system and all tests are passing.",
+    "source_id": "text_b4d1bff3-c66e-42a4-8d9d-b4d8e042bcd1",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Just finished a great coding session! Implemented the new authentication system and all tests are passing"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T15:06:31.209648",
+    "input_type": "text_note",
+    "raw_content": "Feeling a bit stressed about tomorrow's client presentation. Need to polish the slides and practice the demo.",
+    "source_id": "text_84c88f8b-b3af-4290-9fb0-50826a8aa5ce",
+    "contextual_tags": [
+      "Personal"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Stressed"
+  },
+  {
+    "timestamp": "2025-11-03T15:06:45.688108",
+    "input_type": "text_note",
+    "raw_content": "Had productive coffee chat with Maria from marketing. She suggested collaborating on the Q1 product launch campaign. Need to schedule a follow-up meeting next week.",
+    "source_id": "text_5c8bac3e-4d6b-4ecf-bf95-dcd289553e78",
+    "contextual_tags": [
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Need to schedule a follow-up meeting next week"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-03T19:00:40.532991",
+    "input_type": "text_note",
+    "raw_content": "Today was incredibly productive! I completed the database migration, finished writing comprehensive API documentation, and had an excellent brainstorming session with the team about our Q1 product roadmap. Need to follow up with Sarah about the budget proposal and schedule a kickoff meeting for the new project next week. Feeling energized and motivated!",
+    "source_id": "text_c22f999d-0584-43a0-a3b0-87ee1472d15e",
+    "contextual_tags": [
+      "Work",
+      "Task",
+      "Meeting"
+    ],
+    "extracted_action_items": [
+      "Follow up with Sarah about the budget proposal",
+      "Schedule a kickoff meeting for the new project next week"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T19:00:52.409577",
+    "input_type": "text_note",
+    "raw_content": "Worked on the new dashboard feature. The team really liked the UI mockups.",
+    "source_id": "text_59b9c13d-be5c-4113-a63c-863da3c6c482",
+    "contextual_tags": [
+      "Work",
+      "Task"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T20:24:16.659030",
+    "input_type": "text_note",
+    "raw_content": "Had a productive morning meeting with the team about Q4 goals. Need to send follow-up email to Sarah.",
+    "source_id": "text_81066f98-4403-450f-be77-c9ebb2dddc3b",
+    "contextual_tags": [
+      "Work",
+      "Meeting",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Send follow-up email to Sarah"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-03T20:24:19.768421",
+    "input_type": "text_note",
+    "raw_content": "Feeling stressed about the upcoming project deadline next Friday. Should block out time for deep work.",
+    "source_id": "text_443e22c8-f924-41a4-b479-e33444ef203e",
+    "contextual_tags": [
+      "Processing Error"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-03T20:24:22.707426",
+    "input_type": "text_note",
+    "raw_content": "Great idea: Create a new feature for automatic task prioritization in the app.",
+    "source_id": "text_587b6691-cbc4-40c1-b813-56fa032faa59",
+    "contextual_tags": [
+      "Work",
+      "Idea"
+    ],
+    "extracted_action_items": [
+      "Create a new feature for automatic task prioritization in the app"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T20:24:25.078544",
+    "input_type": "text_note",
+    "raw_content": "Lunch meeting with John went well. He suggested we collaborate on the ML project.",
+    "source_id": "text_de05f216-f4bd-4951-a597-4f65ba30facd",
+    "contextual_tags": [
+      "Work",
+      "Meeting",
+      "Idea"
+    ],
+    "extracted_action_items": [
+      "Collaborate with John on the ML project"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T23:42:40.837439",
+    "input_type": "text_note",
+    "raw_content": "Started my day with a productive team meeting. We discussed the Q4 roadmap and everyone is excited about the new features. Need to update the project documentation by end of week.",
+    "source_id": "text_ba3c30a1-bbfc-4a7d-9683-8818fdb04100",
+    "contextual_tags": [
+      "Work",
+      "Meeting",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Update project documentation by end of week"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-03T23:43:36.499440",
+    "input_type": "text_note",
+    "raw_content": "Made great progress on the API documentation today. The team gave positive feedback. Should schedule a demo for stakeholders next Tuesday.",
+    "source_id": "text_ca745348-4c6b-4650-bf0b-d2393351b809",
+    "contextual_tags": [
+      "Work",
+      "Task",
+      "Meeting"
+    ],
+    "extracted_action_items": [
+      "Schedule a demo for stakeholders next Tuesday"
+    ],
+    "inferred_emotion": "Excited"
+  },
+  {
+    "timestamp": "2025-11-07T14:26:09.445421",
+    "input_type": "text_note",
+    "raw_content": "add note: test the new voice command system",
+    "source_id": "text_d0768aa5-5ae8-4162-bc9e-684df0c854a1",
+    "contextual_tags": [
+      "Processing Error"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-07T15:51:08.496299",
+    "input_type": "text_note",
+    "raw_content": "block my time from 7:00 to 8:00 because I have a birthday party to go",
+    "source_id": "text_f15f2fff-140c-4abf-b280-b181f12d0887",
+    "contextual_tags": [
+      "Processing Error"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-07T15:51:35.436836",
+    "input_type": "text_note",
+    "raw_content": "I need to make the leadership dashboard config",
+    "source_id": "text_93da9f83-c4f0-4cec-a8e7-7071e3b49341",
+    "contextual_tags": [
+      "Work",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Make leadership dashboard config"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-07T16:04:09.124430",
+    "input_type": "photo_ocr",
+    "raw_content": "[OCR not available. Install Pillow and pytesseract, and configure Tesseract.]",
+    "source_id": "ocr_9f52dbcd-90e9-4cc9-948b-54246232b1d9",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-07T16:09:25.420749",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5\n\n[Calendar Events Extracted: 9]",
+    "source_id": "ocr_tmp9trp83hw",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-07T19:05:31.919212",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5\n\n[Calendar Events Extracted: 8]",
+    "source_id": "ocr_tmpt6p76d_4",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-08T11:02:13.672818",
+    "input_type": "text_note",
+    "raw_content": "add note testing voice command functionality",
+    "source_id": "text_d169253f-5a12-4247-be57-a7ffe2d6a3ee",
+    "contextual_tags": [
+      "Task",
+      "Work"
+    ],
+    "extracted_action_items": [
+      "Add note for testing voice command functionality"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T11:06:26.753204",
+    "input_type": "text_note",
+    "raw_content": "Automated test entry created at 11:06:24",
+    "source_id": "text_0c131f05-f486-413f-b4ca-617c555e90f9",
+    "contextual_tags": [
+      "Processing Error"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T11:07:01.457352",
+    "input_type": "text_note",
+    "raw_content": "add note testing voice command functionality",
+    "source_id": "text_dedc2f25-bb5f-447e-b960-732dfec6d93b",
+    "contextual_tags": [
+      "Task",
+      "Work"
+    ],
+    "extracted_action_items": [
+      "Test voice command functionality"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T21:43:16.294717",
+    "input_type": "text_note",
+    "raw_content": "Automated test entry created at 21:43:14",
+    "source_id": "text_4397b363-d8cb-4e27-ac44-a790a874c45e",
+    "contextual_tags": [
+      "Work",
+      "Task"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T21:43:50.105091",
+    "input_type": "text_note",
+    "raw_content": "add note testing voice command functionality",
+    "source_id": "text_515b502b-b8b3-44e1-a6f3-7310008ac823",
+    "contextual_tags": [
+      "Task",
+      "Work"
+    ],
+    "extracted_action_items": [
+      "Test voice command functionality"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T22:35:39.232470",
+    "input_type": "text_note",
+    "raw_content": "add a note that I have to pick up my daughter",
+    "source_id": "text_d4d6f5a2-7119-44e1-a67e-4cc9088f2378",
+    "contextual_tags": [
+      "Personal",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Pick up daughter"
+    ],
+    "inferred_emotion": "Routine"
+  },
+  {
+    "timestamp": "2025-11-08T22:35:53.484101",
+    "input_type": "text_note",
+    "raw_content": "I remember to finish bigquery data analysis",
+    "source_id": "text_e124ceab-e063-4940-9038-aa9d1331f6ae",
+    "contextual_tags": [
+      "Work",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Finish BigQuery data analysis"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-08T22:36:32.360556",
+    "input_type": "text_note",
+    "raw_content": "number to finish Triple meter travel planner and photo cleaner machine in real time notes and multiple calendar sync up",
+    "source_id": "text_c7797967-949d-4dd3-b783-e8303b8ea214",
+    "contextual_tags": [
+      "Processing Error"
+    ],
+    "extracted_action_items": [],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T22:36:54.862622",
+    "input_type": "text_note",
+    "raw_content": "remember to give UV his laptop in the morning",
+    "source_id": "text_3ae6178c-c7bb-401a-885c-aac947bb9353",
+    "contextual_tags": [
+      "Work",
+      "Task"
+    ],
+    "extracted_action_items": [
+      "Give UV his laptop in the morning"
+    ],
+    "inferred_emotion": "Routine"
+  },
+  {
+    "timestamp": "2025-11-08T22:37:42.518995",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5\n\n[Calendar Events Extracted: 8]",
+    "source_id": "ocr_tmp8zx_blau",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-08T22:37:55.391002",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5\n\n[Calendar Events Extracted: 8]",
+    "source_id": "ocr_tmpomsosg70",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-08T22:51:02.969312",
+    "input_type": "text_note",
+    "raw_content": "tomorrow set up a meeting from 2:00 to 3:00 for a machine learning learning",
+    "source_id": "text_58b374d2-e2af-440c-bce1-bc7d431375d5",
+    "contextual_tags": [
+      "Work",
+      "Meeting",
+      "Learning"
+    ],
+    "extracted_action_items": [
+      "Set up a meeting for machine learning from 2:00 to 3:00 tomorrow"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T22:51:17.057762",
+    "input_type": "text_note",
+    "raw_content": "remind pranjal to finish the crew AI code",
+    "source_id": "text_272f3f50-c402-49f8-abfe-33ff1eb7ee11",
+    "contextual_tags": [
+      "Work",
+      "Task",
+      "Urgent"
+    ],
+    "extracted_action_items": [
+      "Remind Pranjal to finish the crew AI code"
+    ],
+    "inferred_emotion": "Neutral"
+  },
+  {
+    "timestamp": "2025-11-08T22:56:23.163649",
+    "input_type": "text_note",
+    "raw_content": "slot for tomorrow 11:00 to 1:00 for machine learning projects",
+    "source_id": "text_2145ed8d-c0ba-4de2-90a8-acdcfbf06d20",
+    "contextual_tags": [
+      "Work",
+      "Task",
+      "Learning"
+    ],
+    "extracted_action_items": [
+      "Schedule slot for machine learning projects tomorrow from 11:00 to 1:00"
+    ],
+    "inferred_emotion": "High Focus"
+  },
+  {
+    "timestamp": "2025-11-09T00:42:11.165471",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5",
+    "source_id": "ocr_tmpxyf45iaj",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:42:23.529634",
+    "input_type": "photo_ocr",
+    "raw_content": "November 2025 >\nSeeMetTo WoT F gs\n\n| 26 27 28 29 30 1 1\n\n\"0\n\nSee0e 12 18 14 15\n\nMens 4 5 6\n\n1% 17 18 \u00ab19 20 21 22\n\n23\u00b024 25 26 27 28 29\n\nBega? 3 4 lS Cg\n\n\"+ Add Calendar\n\ni My Calendars\n\u2014 @ Calendar\nO Birthdays\n\nO Birthdays1\nUnited States holidays\n\n12PM\n\n1PM\n\n2PM\n\n3PM\n\ntoday < > November 3 - November 7, 2025\nPST | Mon\n3\nAlay || Anand Vidhyasekaran 000 (PTO)\nX-Matters\n_ B transition\nSAM \u00a5 RECAP,\nOoommm... @\nCanceled: POS Project - We.\n2AM\nKid Drop-off\nMicrosoft Teams Meeting\n10AM &\n\nPOS Project Huddle Microsof... ?\n\nBackgroun...@ | Canceled:... \u00a2\n\nSai Krishna -\n\nDoctor\n\nAppointment\n\nMicrosoft\n\nTeams Meeti\nKids School\nPickup\n\nMicrosoft Tea,\n\nTue\n\n4\n\nCanceled: Security and UX\nWeekly Stand-up\nMicrosoft Teams Meeting,\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nSTS - Dev.\n\nCanceled: S2P Coupa middle.\n\nCanceled: S2P Coupa/SAP Cc.\n\n\u2018$2P Coupa.\n\nCanceled:\nElement Blue/\n\nExact Kl nee Tuesday Kids\n\n2 |} school early\ndismissal...\n\nCanceled: EWM/OncoMove... @\n\nCanceled:... \u00a2\n\nNew York, NY i\nToday: 63\u00b0F 65\u00a2F / ster >\n\nWed\n\n5\nKid\nDrop-\noff.\n\nYou're |f sap\n\u00ae Zinvited: \u00a7 digital\nPrecisio\n\nnOne. \u00ae\n\nTouchpoint GBF and CPI-DS Mi\n\nCanceled:\nSecurity and\nUX Weekly S. 7\n\nCancele\n\n\u2018Qoommm session Microsoft... 2\n\nKids School Pickup\nMicrosoft Teams Meeting\n\nThu\n\n6\n\nweekly stand-up\nMicrosoft Teams Meeting..\n\nCanceled:\nSAP Develop.\n\n2\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nCanceled: $2P Coupa middle...\n\nCanceled: $2P Coupa Middle... | 21:1 Prashil/-Jiten Microsoft. 1\n\n\u2018Canceled: Fill out PPMPro Ti... @\n\n{IT Holiday Get Together with\n\n% Amir Khan\n\n\u00a7 701G Bldg - Joffre Baker\nConference Room\n\n4 Gloria Gomez\n\n{ 2? Coupa/SAP Connect & C...'&\n\nKids Schoo! Pickup.\nMicrosoft Teams Meating\n\n= Filter ~ \u00a9) Work Week \u00a9 copiot y a\n\nFri\n\nzs\n\nKid Drop-off\nMicrosoft Teams Meeting",
+    "source_id": "ocr_tmpps5loptb",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:46:23.295779",
+    "input_type": "photo_ocr",
+    "raw_content": "November 2025 >\nSeeMetTo WoT F gs\n\n| 26 27 28 29 30 1 1\n\n\"0\n\nSee0e 12 18 14 15\n\nMens 4 5 6\n\n1% 17 18 \u00ab19 20 21 22\n\n23\u00b024 25 26 27 28 29\n\nBega? 3 4 lS Cg\n\n\"+ Add Calendar\n\ni My Calendars\n\u2014 @ Calendar\nO Birthdays\n\nO Birthdays1\nUnited States holidays\n\n12PM\n\n1PM\n\n2PM\n\n3PM\n\ntoday < > November 3 - November 7, 2025\nPST | Mon\n3\nAlay || Anand Vidhyasekaran 000 (PTO)\nX-Matters\n_ B transition\nSAM \u00a5 RECAP,\nOoommm... @\nCanceled: POS Project - We.\n2AM\nKid Drop-off\nMicrosoft Teams Meeting\n10AM &\n\nPOS Project Huddle Microsof... ?\n\nBackgroun...@ | Canceled:... \u00a2\n\nSai Krishna -\n\nDoctor\n\nAppointment\n\nMicrosoft\n\nTeams Meeti\nKids School\nPickup\n\nMicrosoft Tea,\n\nTue\n\n4\n\nCanceled: Security and UX\nWeekly Stand-up\nMicrosoft Teams Meeting,\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nSTS - Dev.\n\nCanceled: S2P Coupa middle.\n\nCanceled: S2P Coupa/SAP Cc.\n\n\u2018$2P Coupa.\n\nCanceled:\nElement Blue/\n\nExact Kl nee Tuesday Kids\n\n2 |} school early\ndismissal...\n\nCanceled: EWM/OncoMove... @\n\nCanceled:... \u00a2\n\nNew York, NY i\nToday: 63\u00b0F 65\u00a2F / ster >\n\nWed\n\n5\nKid\nDrop-\noff.\n\nYou're |f sap\n\u00ae Zinvited: \u00a7 digital\nPrecisio\n\nnOne. \u00ae\n\nTouchpoint GBF and CPI-DS Mi\n\nCanceled:\nSecurity and\nUX Weekly S. 7\n\nCancele\n\n\u2018Qoommm session Microsoft... 2\n\nKids School Pickup\nMicrosoft Teams Meeting\n\nThu\n\n6\n\nweekly stand-up\nMicrosoft Teams Meeting..\n\nCanceled:\nSAP Develop.\n\n2\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nCanceled: $2P Coupa middle...\n\nCanceled: $2P Coupa Middle... | 21:1 Prashil/-Jiten Microsoft. 1\n\n\u2018Canceled: Fill out PPMPro Ti... @\n\n{IT Holiday Get Together with\n\n% Amir Khan\n\n\u00a7 701G Bldg - Joffre Baker\nConference Room\n\n4 Gloria Gomez\n\n{ 2? Coupa/SAP Connect & C...'&\n\nKids Schoo! Pickup.\nMicrosoft Teams Meating\n\n= Filter ~ \u00a9) Work Week \u00a9 copiot y a\n\nFri\n\nzs\n\nKid Drop-off\nMicrosoft Teams Meeting",
+    "source_id": "ocr_tmp69zeg17u",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:46:30.446379",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5",
+    "source_id": "ocr_tmp162w_d4k",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:49:21.634697",
+    "input_type": "photo_ocr",
+    "raw_content": "November 2025 >\nSeeMetTo WoT F gs\n\n| 26 27 28 29 30 1 1\n\n\"0\n\nSee0e 12 18 14 15\n\nMens 4 5 6\n\n1% 17 18 \u00ab19 20 21 22\n\n23\u00b024 25 26 27 28 29\n\nBega? 3 4 lS Cg\n\n\"+ Add Calendar\n\ni My Calendars\n\u2014 @ Calendar\nO Birthdays\n\nO Birthdays1\nUnited States holidays\n\n12PM\n\n1PM\n\n2PM\n\n3PM\n\ntoday < > November 3 - November 7, 2025\nPST | Mon\n3\nAlay || Anand Vidhyasekaran 000 (PTO)\nX-Matters\n_ B transition\nSAM \u00a5 RECAP,\nOoommm... @\nCanceled: POS Project - We.\n2AM\nKid Drop-off\nMicrosoft Teams Meeting\n10AM &\n\nPOS Project Huddle Microsof... ?\n\nBackgroun...@ | Canceled:... \u00a2\n\nSai Krishna -\n\nDoctor\n\nAppointment\n\nMicrosoft\n\nTeams Meeti\nKids School\nPickup\n\nMicrosoft Tea,\n\nTue\n\n4\n\nCanceled: Security and UX\nWeekly Stand-up\nMicrosoft Teams Meeting,\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nSTS - Dev.\n\nCanceled: S2P Coupa middle.\n\nCanceled: S2P Coupa/SAP Cc.\n\n\u2018$2P Coupa.\n\nCanceled:\nElement Blue/\n\nExact Kl nee Tuesday Kids\n\n2 |} school early\ndismissal...\n\nCanceled: EWM/OncoMove... @\n\nCanceled:... \u00a2\n\nNew York, NY i\nToday: 63\u00b0F 65\u00a2F / ster >\n\nWed\n\n5\nKid\nDrop-\noff.\n\nYou're |f sap\n\u00ae Zinvited: \u00a7 digital\nPrecisio\n\nnOne. \u00ae\n\nTouchpoint GBF and CPI-DS Mi\n\nCanceled:\nSecurity and\nUX Weekly S. 7\n\nCancele\n\n\u2018Qoommm session Microsoft... 2\n\nKids School Pickup\nMicrosoft Teams Meeting\n\nThu\n\n6\n\nweekly stand-up\nMicrosoft Teams Meeting..\n\nCanceled:\nSAP Develop.\n\n2\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nCanceled: $2P Coupa middle...\n\nCanceled: $2P Coupa Middle... | 21:1 Prashil/-Jiten Microsoft. 1\n\n\u2018Canceled: Fill out PPMPro Ti... @\n\n{IT Holiday Get Together with\n\n% Amir Khan\n\n\u00a7 701G Bldg - Joffre Baker\nConference Room\n\n4 Gloria Gomez\n\n{ 2? Coupa/SAP Connect & C...'&\n\nKids Schoo! Pickup.\nMicrosoft Teams Meating\n\n= Filter ~ \u00a9) Work Week \u00a9 copiot y a\n\nFri\n\nzs\n\nKid Drop-off\nMicrosoft Teams Meeting",
+    "source_id": "ocr_tmps9_0g8y9",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:49:29.996769",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5",
+    "source_id": "ocr_tmplar1p3mo",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:55:51.561805",
+    "input_type": "photo_ocr",
+    "raw_content": "November 2025 >\nSeeMetTo WoT F gs\n\n| 26 27 28 29 30 1 1\n\n\"0\n\nSee0e 12 18 14 15\n\nMens 4 5 6\n\n1% 17 18 \u00ab19 20 21 22\n\n23\u00b024 25 26 27 28 29\n\nBega? 3 4 lS Cg\n\n\"+ Add Calendar\n\ni My Calendars\n\u2014 @ Calendar\nO Birthdays\n\nO Birthdays1\nUnited States holidays\n\n12PM\n\n1PM\n\n2PM\n\n3PM\n\ntoday < > November 3 - November 7, 2025\nPST | Mon\n3\nAlay || Anand Vidhyasekaran 000 (PTO)\nX-Matters\n_ B transition\nSAM \u00a5 RECAP,\nOoommm... @\nCanceled: POS Project - We.\n2AM\nKid Drop-off\nMicrosoft Teams Meeting\n10AM &\n\nPOS Project Huddle Microsof... ?\n\nBackgroun...@ | Canceled:... \u00a2\n\nSai Krishna -\n\nDoctor\n\nAppointment\n\nMicrosoft\n\nTeams Meeti\nKids School\nPickup\n\nMicrosoft Tea,\n\nTue\n\n4\n\nCanceled: Security and UX\nWeekly Stand-up\nMicrosoft Teams Meeting,\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nSTS - Dev.\n\nCanceled: S2P Coupa middle.\n\nCanceled: S2P Coupa/SAP Cc.\n\n\u2018$2P Coupa.\n\nCanceled:\nElement Blue/\n\nExact Kl nee Tuesday Kids\n\n2 |} school early\ndismissal...\n\nCanceled: EWM/OncoMove... @\n\nCanceled:... \u00a2\n\nNew York, NY i\nToday: 63\u00b0F 65\u00a2F / ster >\n\nWed\n\n5\nKid\nDrop-\noff.\n\nYou're |f sap\n\u00ae Zinvited: \u00a7 digital\nPrecisio\n\nnOne. \u00ae\n\nTouchpoint GBF and CPI-DS Mi\n\nCanceled:\nSecurity and\nUX Weekly S. 7\n\nCancele\n\n\u2018Qoommm session Microsoft... 2\n\nKids School Pickup\nMicrosoft Teams Meeting\n\nThu\n\n6\n\nweekly stand-up\nMicrosoft Teams Meeting..\n\nCanceled:\nSAP Develop.\n\n2\n\nKid Drop-off\nMicrosoft\nTeams Meeting\n\nCanceled: $2P Coupa middle...\n\nCanceled: $2P Coupa Middle... | 21:1 Prashil/-Jiten Microsoft. 1\n\n\u2018Canceled: Fill out PPMPro Ti... @\n\n{IT Holiday Get Together with\n\n% Amir Khan\n\n\u00a7 701G Bldg - Joffre Baker\nConference Room\n\n4 Gloria Gomez\n\n{ 2? Coupa/SAP Connect & C...'&\n\nKids Schoo! Pickup.\nMicrosoft Teams Meating\n\n= Filter ~ \u00a9) Work Week \u00a9 copiot y a\n\nFri\n\nzs\n\nKid Drop-off\nMicrosoft Teams Meeting",
+    "source_id": "ocr_tmppw1vvz55",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T00:55:59.230591",
+    "input_type": "photo_ocr",
+    "raw_content": "Cc 7? & calendar.google.com/calendar/u/O/r ww to :\n32 | \u00a9 Eurontiome CO DSA @DSA CV UM CS prepiv CY utils EB AIMLEngineer1023.. [Google Docs J PR (Shortwave (h) Schedule CQ study [5 euronessentials COV CQ Prod (4 cvautomation [3 Alfun \u00bb | DD All Bookmarks\nCalendar < > November 2025 20 8 6| @\nsun MON Tue weo THU FRI SAT o\n+ cee = 2 3 4 5 6 7) 8\nST\nTERME Dovight Sving Time ends Preshil at conference S\nNovember 2025, \u00ab> '\nsom tT woT Fs\n3:30pm 2AM\n% 7 mB\u00bb wo Ht\n23 6 8 6 Qe 30pm 3am 9\noo fge ons DSA with Python with Ram DSA with Python with Ram\nov we we Mn Be EO UMMEUME 3:30 - 5:30am 330 ~ \u00a7:30em\nnou 6 % 7 mB +\n6:30pm SAM\nwm 12 3 4 5 6\n2 Search for people 7:30pm = GAM\nLTIMindtree Video Intervie\nea TAM\nBooking pages + pm EPAM Interview Call with Yul EPAM General interview, 7a\n30 Minute Meeting - Arsen\n9:30pm 8AM\nMy calendars A .\ni 10:3 9AM\nPrashil Bulbule opm daily prep call w/Prashit_) [daily prep call w/Prashil_) [daily prepcallw/Prashi] (ERSES) Of caiy CALEY\n, 9- 10am 9~ 10am 9~ 10am 9\nBirthdays\n\u20181:30pm 10 AM Intelligent\nTasks \u2018Agents in the\nInterview with Wizard Comr Enterprise\n\u201cena | interview with Wizard Comg Feet\nInterview with Wizard Com TODO: Send Professional Re\nOther calendars ta Grey Mam ~ 12\npm\nLoft, San\nHolidays in United States 1:30am 12PM Francisco\n4 Prashil Bulbule // Will We\n2:30am 1PM\n3:30am 2PM\nmohul-prashil\n3pm }opm =\ni x\n* oe \u2014\n5:30am 4PM\n6:30am SPM\n7:30am 6PM\nInterview Kick\n6pm, hey\n\u2018ML Interview AIML M! ML Inter \u2018Al ML Masters Sidhanshu\n30am 7PM Ef Sidhans| 6:30 - 7H) 6:30 - 8:45pm\n630-a\n930am 8PM ee\nInterview Scheduled for Al\n10:30am 9PM\nPrep for EPAM Interview\nTomorrow\n11:30am = 10 PM voila\nring your screen. (Re yeR en] PM 5",
+    "source_id": "ocr_tmpscyks684",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T01:00:05.308933",
+    "input_type": "photo_ocr",
+    "raw_content": "Here is all the visible text extracted from the image, preserving its structure and logical reading order:\n\n**Browser Header:**\n*   calendar.google.com/calendar/u/0/r\n*   EuronHome\n*   DSA\n*   DSA\n*   LLM\n*   prepxu\n*   utils\n*   AIMLEngineer_1023...\n*   Google Docs\n*   DPR\n*   Shortwave\n*   (ik) Schedule\n*   study\n*   euronessentials\n*   IV\n*   Prod\n*   cvautomation\n*   Alfun\n*   All Bookmarks\n*   P (Profile picture icon)\n\n**Calendar Main Interface:**\n\n**Top Navigation Bar:**\n*   Calendar (Logo and Text)\n*   Today\n*   < (Previous)\n*   > (Next)\n*   November 2025\n*   (Search icon)\n*   (Help icon)\n*   (Settings icon)\n*   (Support icon)\n*   Week (View selector)\n*   (Calendar icon)\n*   (Tasks icon)\n*   (Contact list icon)\n*   (Current user profile icon)\n\n**Left Sidebar:**\n*   **+ Create** (Button)\n\n*   **November 2025 (Mini Calendar)**\n    *   < (Previous month) > (Next month)\n    *   S M T W T F S\n    *   26 27 28 29 30 31 1\n    *   2 3 4 5 6 **7** 8\n    *   9 10 11 12 13 14 15\n    *   16 17 18 19 20 21 22\n    *   23 24 25 26 27 28 29\n    *   30 1 2 3 4 5 6\n\n*   (Search icon) **Search for people**\n\n*   **Booking pages**\n    *   (Plus icon)\n\n*   **My calendars**\n    *   (Up arrow icon)\n    *   [\u2713] Prashil Bulbule\n    *   [\u2713] Birthdays\n    *   [\u2713] Tasks\n\n*   **Other calendars**\n    *   (Plus icon)\n    *   (Up arrow icon)\n    *   [\u2713] Holidays in United States\n\n**Main Calendar Grid (November 2025 - Week View)**\n\n**Day Headers:**\n*   SUN 2\n*   MON 3\n*   TUE 4\n*   WED 5\n*   THU 6\n*   FRI 7\n*   SAT 8\n\n**Time Axis (IST / PST):**\n*   12 AM / 1 AM\n*   12:30 AM / 1:30 AM\n*   1 AM / 2 AM\n*   1:30 AM / 2:30 AM\n*   2 AM / 3 AM\n*   2:30 AM / **3:30 AM**\n*   3 AM / 4 AM\n*   3:30 AM / 4:30 AM\n*   4 AM / 5 AM\n*   4:30 AM / 5:30 AM\n*   5 AM / 6 AM\n*   5:30 AM / 6:30 AM\n*   6 AM / 7 AM\n*   6:30 AM / 7:30 AM\n*   7 AM / 8 AM\n*   7:30 AM / 8:30 AM\n*   8 AM / 9 AM\n*   8:30 AM / 9:30 AM\n*   9 AM / 10 AM\n*   9:30 AM / 10:30 AM\n*   10 AM / 11 AM\n*   10:30 AM / 11:30 AM\n*   11 AM / 12 PM\n*   11:30 AM / 12:30 PM\n*   12 PM / 1 PM\n*   12:30 PM / 1:30 PM\n*   1 PM / 2 PM\n*   1:30 PM / 2:30 PM\n*   2 PM / 3 PM\n*   2:30 PM / 3:30 PM\n*   3 PM / 4 PM\n*   3:30 PM / 4:30 PM\n*   4 PM / 5 PM\n*   4:30 PM / 5:30 PM\n*   5 PM / 6 PM\n*   5:30 PM / 6:30 PM\n*   6 PM / 7 PM\n*   6:30 PM / 7:30 PM\n*   7 PM / 8 PM\n*   7:30 PM / 8:30 PM\n*   8 PM / 9 PM\n*   8:30 PM / 9:30 PM\n*   9 PM / 10 PM\n*   9:30 PM / 10:30 PM\n*   10 PM / 11 PM\n*   10:30 PM / 11:30 PM\n*   11 PM / 12 AM (Next Day)\n*   11:30 PM / 12:30 AM (Next Day)\n\n**Events:**\n\n*   **Sunday, November 2:**\n    *   2:30 AM: Daylight Saving Time ends\n\n*   **Monday, November 3:**\n    *   3:30 AM - 5:30 AM: DSA with Python with Ram\n    *   (Around 2:30 PM): Election Day\n    *   9:00 PM: Dipinder Singh's meeting, D\n    *   9:00 PM: Interview Scheduled for Al\n\n*   **Tuesday, November 4:**\n    *   9:00 AM - 10:00 AM: daily prep call w/ Prashil\n    *   11:00 AM: Interview with Wizard Comm\n    *   6:30 PM: Interview Kickstart Career Co\n\n*   **Wednesday, November 5:**\n    *   9:00 AM - 10:00 AM: daily prep call w/ Prashil\n    *   11:00 AM: Interview with Wizard Comm\n    *   9:30 AM - 10:00 AM: 30 Minute Meeting - Arsen\n    *   6:00 PM: Interview Kickstart Don\n    *   6:30 PM - 7:30 PM: ML Interview\n    *   9:00 PM - 11:00 PM: Prep for EPAM Interview Tomorrow\n\n*   **Thursday, November 6:**\n    *   6:00 AM: Prashil sf conference\n    *   9:00 AM - 10:00 AM: daily prep call w/ Prashil\n    *   9:00 AM - 8:00 PM: Data Sci Salon SF GenAI and Intelligent Agents in the Enterprise AWS Builder Loft, San Francisco\n    *   9:00 AM - 10:00 AM: daily Call Kyle\n    *   10:00 AM: LTIMindtree Video Interview\n    *   10:00 AM: EPAM Interview Call with Yu\n    *   10:00 AM: EPAM General Interview, Ta\n\n*   **Friday, November 7:**\n    *   9:30 AM - 10:30 AM: daily prep call w/ Prashil\n    *   11:00 AM - 12:00 PM: TODO: Send Professional R\n    *   2:30 PM - 3:30 PM: Prashil Bulbule // Will We\n    *   2:30 PM - 3:30 PM: mohul-prashil\n    *   6:30 PM - 7:30 PM: ML Interview\n    *   6:30 PM - 8:45 PM: ML AI Masters Sidhanshu\n\n*   **Saturday, November 8:**\n    *   3:30 AM - 5:30 AM: DSA with Python with Ram\n\n**Bottom Footer:**\n*   ring your screen.\n*   Stop sharing\n*   Hide\n*   Basic\n\n[\u2705 Calendar Events Extracted: 30]\n- Daylight Saving Time ends (12:00 AM)\n- DSA with Python with Ram (03:30 AM)\n- daily prep call w/ Prashil (09:00 AM)\n- Interview with Wizard Comm (10:30 AM)\n- ML Interview (06:30 PM)\n... and 25 more events",
+    "source_id": "img_tmpl3jl8eyg",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T01:01:18.699478",
+    "input_type": "photo_ocr",
+    "raw_content": "Here is the extracted text from the image, preserving its structure and logical reading order:\n\n**Top Navigation Bar:**\n*   (Hamburger menu icon)\n*   New Event (button with calendar/briefcase icon)\n*   (Search bar with magnifying glass icon) Search\n*   Today (button)\n*   < (Left arrow)\n*   > (Right arrow)\n*   November 3 - November 7, 2025\n*   (Sun/Cloud icon) New York, NY Today: 63\u00b0F / 51\u00b0F\n*   Filter (dropdown)\n*   Work Week (dropdown)\n*   Copilot (dropdown)\n*   (Bell icon)\n*   (Question mark icon)\n*   (Settings gear icon)\n\n**Left Sidebar:**\n\n**Date Picker:**\n*   < (Left arrow)\n*   November 2025\n*   > (Right arrow)\n*   S M T W T F S\n*   26 27 28 29 30 31 1\n*   2 3 4 5 6 7 **8** (Highlighted date)\n*   9 10 11 12 13 14 15\n*   16 17 18 19 20 21 22\n*   23 24 25 26 27 28 29\n*   30 1 2 3 4 5 6\n\n**Calendar List:**\n*   + Add Calendar\n*   jr0727@exactsciences.com\n*   My Calendars (collapsed menu)\n    *   (Checkbox checked) Calendar\n    *   (Checkbox checked) Birthdays\n    *   (Checkbox unchecked) Birthdays1\n    *   (Checkbox unchecked) United States holidays\n    *   (Checkbox checked) Murdock-Portal Elementary School...\n*   > Other Calendars (collapsed menu)\n*   > People's Calendars (collapsed menu)\n*   Groups (collapsed menu)\n    *   (Checkbox unchecked) Invoices\n    *   (Checkbox unchecked) InvoicesH1D\n    *   (Checkbox unchecked) InvoicesH1Q\n    *   (Checkbox unchecked) InvoicesH1R\n    *   (Checkbox unchecked) InvoicesH2D\n    *   (Checkbox unchecked) InvoicesH2Q\n\n**Main Calendar View (November 3 - November 7, 2025):**\n\n| Time  | Mon 3 (PST)                                   | Tue 4                                        | Wed 5                                                              | Thu 6                                                           | Fri 7                                            |\n| :---- | :-------------------------------------------- | :------------------------------------------- | :----------------------------------------------------------------- | :-------------------------------------------------------------- | :----------------------------------------------- |\n| **All Day** | Anand Vidhyasekaran OOO (PTO)                 |                                              |                                                                    | weekly stand-up Microsoft Teams Meeting...                      |                                                  |\n| **8 AM**  | X-Matters transition RECAP... Ooommm...       | Canceled: Security and UX Weekly Stand-up Microsoft Teams Meeting... |                                                                    |                                                                 |                                                  |\n| **9 AM**  | Canceled: POS Project - We... Kid Drop-Off Microsoft Teams Meeting | Kid Drop-Off Microsoft Teams Meeting STS - Dev...                      | Kid Drop-Off... You're Invited: Precision Onc... SAP Digital...      | Kid Drop-Off Microsoft Teams Meeting                            | Kid Drop-Off Microsoft Teams Meeting             |\n| **10 AM** |                                               | Canceled: S2P Coupa middle...                | Touchpoint GBF and CPI-DS Mi...                                    |                                                                 |                                                  |\n| **11 AM** | POS Project Huddle Microsof...                | Canceled: S2P Coupa/SAP C... S2P Coupa... Canceled:... | Canceled: Security and UX Weekly S... Canceled:...                 | Canceled: S2P Coupa middle...                                   | 1:1 - Prashil / Jiten Microsoft...               |\n| **12 PM** | Backgroun... Canceled:...                     | Canceled: Element Blue/Exact KT Ses...       | Ooommm session Microsoft...                                        | IT Holiday Get Together with Amir Khan 701G Bldg - Joffre Baker Conference Room Gloria Gomez | Canceled: Fill out PPMPro Ti...                  |\n| **1 PM**  | Sai Krishna - Doctor Appointment Microsoft Teams Meeti... | Tuesday Kids school early dismissal...       |                                                                    | CPI-DS flows review Microsoft...                                |                                                  |\n| **2 PM**  |                                               | Canceled: EWM/OncoMove... Kids School Pickup Microsoft Tea... | Kids School Pickup Microsoft Teams Meeting                         | S2P Coupa/SAP Connect & C... Kids School Pickup Microsoft Teams Meeting | Kids School Pickup Microsoft Teams Meeting       |\n| **3 PM**  |                                               |                                              |                                                                    |                                                                 |                                                  |\n\n[\u2705 Calendar Events Extracted: 40]\n- Anand Vidhyasekaran OOO (PTO) (12:00 AM)\n- X-Matters transition (08:00 AM)\n- RECAP... (08:30 AM)\n- Canceled: POS Project - We... (09:00 AM)\n- Kid Drop-Off (09:30 AM)\n... and 35 more events",
+    "source_id": "img_tmpcci1ki_k",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  },
+  {
+    "timestamp": "2025-11-09T01:02:35.311591",
+    "input_type": "photo_ocr",
+    "raw_content": "Here is the extracted text from the image, preserving its structure and logical reading order:\n\n**Browser / Tab Area:**\n\n*   **URL:** `calendar.google.com/calendar/u/0/r`\n*   **Tabs:**\n    *   EuronHome\n    *   DSA\n    *   LLM\n    *   prepix\n    *   utils\n    *   AIMLEngineer_1023...\n    *   Google Docs\n    *   DPR\n    *   Shortwave\n    *   Schedule\n    *   study\n    *   euronesentials\n    *   IV\n    *   Prod\n    *   cvautomation\n    *   Alfun\n    *   All Bookmarks\n*   **User Profile Icon:** P (for Prashil)\n\n**Calendar Header:**\n\n*   Calendar (Google Calendar logo and text)\n*   Today\n*   `<` (Previous)\n*   `>` (Next)\n*   NOVEMBER 2025\n*   Search icon\n*   Help icon\n*   Settings icon\n*   Density icon\n*   Mini-calendar icon\n*   Tasks icon\n*   Week (View selector dropdown)\n*   Google Apps icon\n*   User Profile Icon: P (for Prashil)\n\n**Left Sidebar:**\n\n*   **+ Create**\n*   **Mini-Calendar (November 2025):**\n    *   `<` `>`\n    *   S M T W T F S\n    *   26 27 28 29 30 31 1\n    *   2 3 4 5 6 **7** 8\n    *   9 10 11 12 13 14 15\n    *   16 17 18 19 20 21 22\n    *   23 24 25 26 27 28 29\n    *   30 1 2 3 4 5 6\n*   Search for people\n*   **Booking pages** `+`\n*   **My calendars** `^`\n    *   `[X]` Prashil Bulbule\n    *   `[X]` Birthdays\n    *   `[X]` Tasks\n*   **Other calendars** `+` `^`\n    *   `[X]` Holidays in United States\n*   Stop sharing\n*   Hide\n\n**Main Calendar View (Week of November 2 - November 8, 2025):**\n\n*   **Time Zones:** IST | PST\n\n*   **Sunday, November 2**\n    *   All day: Daylight Saving Time ends\n    *   3:30 AM - 5:30 AM (IST): DSA with Python with Ram\n\n*   **Monday, November 3**\n    *   All day: Election Day\n    *   9:00 AM - 10:00 AM (IST): daily prep call w/ Prashil\n    *   11:00 AM - 12:00 PM (IST): Interview with Wizard Comm\n    *   9:30 PM - 10:30 PM (IST): Dipinder Singh's meeting, ?\n\n*   **Tuesday, November 4**\n    *   9:00 AM - 10:00 AM (IST): daily prep call w/ Prashil\n    *   11:00 AM - 12:00 PM (IST): Interview with Wizard Comm\n    *   5:30 PM - 6:30 PM (IST): Interview Kickstart Career Co\n    *   6:30 PM - 7:30 PM (IST): ML Interview\n    *   9:30 PM - 10:30 PM (IST): Interview Scheduled for AI\n\n*   **Wednesday, November 5**\n    *   7:30 AM - 8:00 AM (IST): 30 Minute Meeting - Arsen\n    *   9:00 AM - 10:00 AM (IST): daily prep call w/ Prashil\n    *   11:00 AM - 12:00 PM (IST): Interview with Wizard Comm\n    *   6:00 PM (IST, assumed start): Interview Kickstart Don\n    *   6:30 PM - 7:30 PM (IST): ML Interview\n    *   9:00 PM - 11:00 PM (IST): Prep for EPAM Interview Tomorrow\n\n*   **Thursday, November 6**\n    *   All day: Prashil sf conference\n    *   6:00 AM - 7:00 AM (IST): LTIMindtree Video Interview\n    *   7:00 AM - 8:00 AM (IST): EPAM Interview Call with Yu\n    *   9:00 AM - 10:00 AM (IST): daily Call Kyle\n    *   9:00 AM - 8:00 PM (IST): Data Scien Salon SF GenAI an Intelligent Agents in the Enterprise, AWS Builder Loft, San Francisco\n\n*   **Friday, November 7** (Current Day)\n    *   7:00 AM - 8:00 AM (IST): EPAM General Interview, Ta\n    *   9:30 AM - 10:30 AM (IST): daily prep call w/ Prashil\n    *   11:00 AM - 12:00 PM (IST): TODO: Send Professional R\n    *   1:30 PM - 2:30 PM (IST): Prashil Bulbule // Will We\n    *   2:30 PM - 3:30 PM (IST): mohul-prashil\n    *   6:30 PM - 8:00 PM (IST): AI ML Masters Sidhanshu\n\n*   **Saturday, November 8**\n    *   3:30 AM - 5:30 AM (IST): DSA with Python with Ram\n    *   6:30 AM - 8:45 AM (IST): AI ML Masters Sidhanshu\n\n[\u2705 Calendar Events Extracted: 29]\n- Daylight Saving Time ends (12:00 AM)\n- DSA with Python with Ram (03:30 AM)\n- Election Day (12:00 AM)\n- daily prep call w/ Prashil (09:00 AM)\n- Interview with Wizard Comm (11:30 AM)\n... and 24 more events",
+    "source_id": "img_tmpkhf9kw3y",
+    "contextual_tags": [],
+    "extracted_action_items": [],
+    "inferred_emotion": null
+  }
+]

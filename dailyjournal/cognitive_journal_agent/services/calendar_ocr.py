@@ -12,6 +12,13 @@ import uuid
 try:
     import pytesseract
     from PIL import Image
+
+    # Configure Tesseract path for Windows
+    if os.name == 'nt':  # Windows
+        tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+        if os.path.exists(tesseract_path):
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
     OCR_AVAILABLE = True
 except ImportError:
     OCR_AVAILABLE = False
@@ -132,40 +139,50 @@ class CalendarOCRProcessor:
                 reference_date = datetime.now()
 
             system_prompt = """You are an expert at parsing calendar events from OCR-extracted text.
-Your task is to identify and extract calendar events from the provided text, which may be messy or imperfect due to OCR errors.
+Your task is to identify and extract calendar events from the provided text, which may be messy or imperfect due to OCR errors from Google Calendar, Outlook, or other calendar applications.
+
+IMPORTANT GUIDELINES:
+1. The text may show a calendar grid with dates, day names, and events
+2. Events may appear with times like "3pm", "9am", "2:30pm", or "14:00"
+3. Events may span multiple lines or be abbreviated
+4. Look for patterns like "Event Name" followed by time or date indicators
+5. Month and year context will be in the reference date provided
+6. If you see abbreviated text like "Prashil sf conference", expand it reasonably
 
 Extract the following information for each event:
-- title: Event title/subject
-- date: Event date (in ISO format YYYY-MM-DD)
-- start_time: Start time (in HH:MM format, 24-hour)
-- end_time: End time (in HH:MM format, 24-hour)
+- title: Event title/subject (be liberal - extract anything that looks like an event)
+- date: Event date (in ISO format YYYY-MM-DD, infer from context and reference date)
+- start_time: Start time (in HH:MM format, 24-hour clock)
+- end_time: End time (in HH:MM format, 24-hour clock - if not specified, add 1 hour to start)
 - location: Location (if mentioned)
 - description: Any additional details
 
-Return your response as a JSON array of events. If you cannot determine a field, use null.
-If times are not specified, use reasonable defaults (e.g., all-day event or business hours).
+EXTRACT ALL EVENTS even if information is partial. For missing fields:
+- If no time: assume 09:00 to 10:00
+- If only one time: assume it's start time, add 1 hour for end
+- If date unclear: use reference date to infer (e.g., if reference is Nov 2025, "Nov 5" = 2025-11-05)
 
-Example output:
+Example output format (MUST be valid JSON):
 [
   {
     "title": "Team Meeting",
-    "date": "2025-01-15",
+    "date": "2025-11-15",
     "start_time": "14:00",
     "end_time": "15:00",
-    "location": "Conference Room A",
-    "description": "Weekly team sync"
+    "location": "Conference Room",
+    "description": null
   },
   {
-    "title": "Doctor Appointment",
-    "date": "2025-01-16",
-    "start_time": "10:30",
-    "end_time": "11:30",
-    "location": "Medical Center",
+    "title": "Prashil SF Conference",
+    "date": "2025-11-05",
+    "start_time": "15:00",
+    "end_time": "16:00",
+    "location": null,
     "description": null
   }
 ]
 
-IMPORTANT: Return ONLY the JSON array, no additional text or explanation."""
+CRITICAL: Return ONLY the JSON array, no additional text, markdown formatting, or explanation. Start with [ and end with ]."""
 
             user_prompt = f"""Reference date: {reference_date.strftime('%Y-%m-%d')}
 

@@ -15,6 +15,13 @@ from pathlib import Path
 try:
     from PIL import Image
     import pytesseract
+
+    # Configure Tesseract path for Windows
+    if os.name == 'nt':  # Windows
+        tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+        if os.path.exists(tesseract_path):
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+
     TESSERACT_AVAILABLE = True
 except ImportError:
     TESSERACT_AVAILABLE = False
@@ -118,9 +125,35 @@ class MultimodalIngest:
 
     def process_photo_ocr(self, image_path: str, metadata: Dict[str, Any] = None) -> JournalEntry:
         """
-        Process an image using OCR to extract text.
+        Process an image using Gemini multimodal AI (primary) or OCR (fallback).
         Supports: PNG, JPG, JPEG, TIFF, BMP
         """
+        # Try Gemini first (best results)
+        try:
+            from services.gemini_multimodal import GeminiMultimodalProcessor
+
+            gemini = GeminiMultimodalProcessor()
+            extracted_text, error = gemini.extract_text_from_image(image_path)
+
+            if not error and extracted_text:
+                # Store image path for later display
+                image_metadata = {
+                    "image_path": image_path,
+                    "extraction_method": "gemini_multimodal",
+                    **(metadata or {})
+                }
+
+                return JournalEntry(
+                    timestamp=datetime.now(),
+                    input_type="photo_ocr",
+                    raw_content=extracted_text.strip(),
+                    source_id=f"img_{Path(image_path).stem}",
+                    metadata=image_metadata
+                )
+        except Exception as e:
+            print(f"Gemini extraction failed, falling back to Tesseract: {e}")
+
+        # Fallback to Tesseract OCR
         if not TESSERACT_AVAILABLE:
             return JournalEntry(
                 timestamp=datetime.now(),
@@ -133,11 +166,19 @@ class MultimodalIngest:
             image = Image.open(image_path)
             extracted_text = pytesseract.image_to_string(image)
 
+            # Store image path
+            image_metadata = {
+                "image_path": image_path,
+                "extraction_method": "tesseract_ocr",
+                **(metadata or {})
+            }
+
             return JournalEntry(
                 timestamp=datetime.now(),
                 input_type="photo_ocr",
                 raw_content=extracted_text.strip() if extracted_text.strip() else "[No text detected in image]",
                 source_id=f"ocr_{Path(image_path).stem}",
+                metadata=image_metadata
             )
 
         except Exception as e:

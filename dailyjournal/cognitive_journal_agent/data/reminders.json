@@ -1,0 +1,15 @@
+[
+  {
+    "reminder_id": "rem_7de85db4",
+    "recipient": "self",
+    "message": "test the system",
+    "reminder_time": "2025-11-07 20:00:00",
+    "status": "pending",
+    "created_at": "2025-11-07 14:28:33.535875",
+    "sent_at": null,
+    "notification_method": "browser",
+    "recurring": false,
+    "recurrence_pattern": null,
+    "metadata": {}
+  }
+]

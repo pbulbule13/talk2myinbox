@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Journal - Compact View</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; font-size: 13px; }
+
+        /* Header */
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 20px; margin-bottom: 2px; }
+        .header p { font-size: 11px; opacity: 0.9; }
+
+        /* Stats Bar */
+        .stats { display: flex; gap: 8px; padding: 10px 20px; background: white; border-bottom: 1px solid #e5e7eb; }
+        .stat-card { flex: 1; text-align: center; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px; color: white; }
+        .stat-num { font-size: 20px; font-weight: 700; }
+        .stat-label { font-size: 10px; opacity: 0.9; }
+
+        /* Main Layout */
+        .container { max-width: 1600px; margin: 0 auto; padding: 12px; }
+        .grid { display: grid; grid-template-columns: 350px 1fr 300px; gap: 12px; }
+
+        /* Cards */
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        .card-header { background: #f9fafb; padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .card-body { padding: 12px; max-height: calc(100vh - 400px); overflow-y: auto; }
+        .card-body::-webkit-scrollbar { width: 6px; }
+        .card-body::-webkit-scrollbar-track { background: #f1f1f1; }
+        .card-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; padding: 8px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
+        .tab { padding: 6px 12px; border-radius: 4px; cursor: pointer; background: transparent; border: none; color: #6b7280; font-weight: 500; }
+        .tab.active { background: #667eea; color: white; }
+        .tab-content { display: none; padding: 10px; }
+        .tab-content.active { display: block; }
+
+        /* Forms */
+        textarea, input[type="text"], select { width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; }
+        textarea { resize: vertical; }
+        textarea:focus, input:focus, select:focus { outline: none; border-color: #667eea; ring: 2px solid rgba(102, 126, 234, 0.2); }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+        /* Upload Zones */
+        .upload-zone { border: 2px dashed #d1d5db; border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .upload-zone:hover { border-color: #667eea; background: #f0f4ff; }
+        .upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+        /* Items */
+        .event-item, .entry-item, .action-item { padding: 8px; margin-bottom: 6px; border-left: 3px solid; border-radius: 4px; font-size: 12px; }
+        .event-item { border-color: #10b981; background: #ecfdf5; }
+        .event-item.conflict { border-color: #ef4444; background: #fee2e2; }
+        .entry-item { border-color: #f59e0b; background: #fef3c7; }
+        .action-item { border-color: #8b5cf6; background: #f3e8ff; display: flex; align-items: center; gap: 8px; }
+
+        .item-time { font-weight: 600; color: #667eea; font-size: 11px; }
+        .item-title { font-weight: 500; margin-top: 2px; }
+        .item-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+        /* Tags */
+        .tag { display: inline-block; padding: 2px 8px; background: #e0e7ff; color: #4f46e5; border-radius: 10px; font-size: 10px; margin-right: 4px; margin-top: 4px; }
+
+        /* Priority */
+        .priority { padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .priority.P1 { background: #fee2e2; color: #991b1b; }
+        .priority.P2 { background: #fef3c7; color: #92400e; }
+        .priority.P3 { background: #d1fae5; color: #065f46; }
+
+        /* Alert */
+        .alert { padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 10px; font-size: 12px; }
+        .alert-warning { background: #fee2e2; border-color: #ef4444; }
+
+        /* Loading */
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Calendar List */
+        .cal-item { display: flex; justify-content: space-between; align-items: center; padding: 6px; background: #f9fafb; border-radius: 4px; margin-bottom: 4px; font-size: 11px; }
+        .cal-remove { color: #ef4444; cursor: pointer; font-size: 11px; }
+        .cal-remove:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Summary Box */
+        .summary-box { background: #f0f4ff; border-left: 4px solid #667eea; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 12px; line-height: 1.5; }
+
+        /* Compact Spacing */
+        .mb-2 { margin-bottom: 8px; }
+        .mt-2 { margin-top: 8px; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .w-full { width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">🧠</span>
+            <div>
+                <h1>Cognitive Journal</h1>
+                <p>AI-Powered Personal Assistant</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-num" id="stat-events">0</div>
+            <div class="stat-label">Events</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="stat-entries">0</div>
+            <div class="stat-label">Entries</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="stat-actions">0</div>
+            <div class="stat-label">Actions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="stat-conflicts">0</div>
+            <div class="stat-label">Conflicts</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="grid">
+
+            <!-- Left Column: Input -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Quick Entry -->
+                <div class="card">
+                    <div class="card-header">📝 Quick Entry</div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('text')">Text</button>
+                        <button class="tab" onclick="switchTab('voice')">Voice</button>
+                        <button class="tab" onclick="switchTab('image')">Image</button>
+                        <button class="tab" onclick="switchTab('pdf')">PDF</button>
+                        <button class="tab" onclick="switchTab('code')">Code</button>
+                    </div>
+
+                    <!-- Text -->
+                    <div id="content-text" class="tab-content active">
+                        <textarea id="textInput" rows="3" placeholder="Write your thoughts..."></textarea>
+                        <button class="btn btn-primary w-full mt-2" onclick="submitText()">Add Entry</button>
+                    </div>
+
+                    <!-- Voice -->
+                    <div id="content-voice" class="tab-content">
+                        <div class="upload-zone" onclick="document.getElementById('voiceInput').click()">
+                            <div class="upload-icon">🎤</div>
+                            <p style="font-size: 12px;">Upload Audio</p>
+                            <input type="file" id="voiceInput" accept="audio/*" style="display:none" onchange="handleUpload(event, 'voice')">
+                        </div>
+                    </div>
+
+                    <!-- Image -->
+                    <div id="content-image" class="tab-content">
+                        <div class="upload-zone" id="imageZone">
+                            <div class="upload-icon">📷</div>
+                            <p style="font-size: 12px; margin-bottom: 4px;">Drop image or click</p>
+                            <p style="font-size: 10px; color: #6b7280;">Gemini AI - Extracts text & events</p>
+                            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleUpload(event, 'image')">
+                        </div>
+                    </div>
+
+                    <!-- PDF -->
+                    <div id="content-pdf" class="tab-content">
+                        <div class="upload-zone" onclick="document.getElementById('pdfInput').click()">
+                            <div class="upload-icon">📄</div>
+                            <p style="font-size: 12px;">Upload PDF</p>
+                            <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handleUpload(event, 'pdf')">
+                        </div>
+                    </div>
+
+                    <!-- Code -->
+                    <div id="content-code" class="tab-content">
+                        <select id="codeLanguage" class="mb-2">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                        <textarea id="codeInput" rows="4" placeholder="Paste code..." style="font-family: monospace;"></textarea>
+                        <button class="btn btn-primary w-full mt-2" onclick="submitCode()">Add Code</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Upload -->
+                <div class="card">
+                    <div class="card-header">📅 Calendar Upload</div>
+                    <div style="padding: 10px;">
+                        <div class="upload-zone" id="calendarZone" style="padding: 12px;">
+                            <div class="upload-icon" style="font-size: 28px;">📤</div>
+                            <p style="font-size: 11px; margin-bottom: 2px;">Upload 2-3 Calendars</p>
+                            <p style="font-size: 10px; color: #6b7280;">Detect overlaps</p>
+                            <input type="file" id="calendarInput" accept="image/*" multiple style="display:none" onchange="handleCalendarUpload(event)">
+                        </div>
+                        <div id="calendarList" class="mt-2"></div>
+                        <button id="consolidateBtn" class="btn btn-success w-full mt-2" style="display:none" onclick="consolidate()">Consolidate</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Summaries -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Overall Summary -->
+                <div class="card">
+                    <div class="card-header">📊 Overall Summary (Today + All Calendars)</div>
+                    <div class="card-body" id="overallSummary" style="max-height: 280px;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Calendar Summary - FULL VIEW -->
+                <div class="card">
+                    <div class="card-header">📅 Full Calendar Summary (All Uploaded Calendars)</div>
+                    <div class="card-body" id="calendarSummary" style="max-height: 450px;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Journal Summary -->
+                <div class="card">
+                    <div class="card-header">📝 Journal</div>
+                    <div class="card-body" id="journalSummary" style="max-height: 200px;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Activity -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Recent Entries -->
+                <div class="card">
+                    <div class="card-header">📋 Recent</div>
+                    <div class="card-body" id="recentEntries" style="max-height: 350px;">
+                        <p style="color: #6b7280; text-align: center; padding: 20px;">No entries</p>
+                    </div>
+                </div>
+
+                <!-- Action Items -->
+                <div class="card">
+                    <div class="card-header">✅ Actions</div>
+                    <div class="card-body" id="actionItems" style="max-height: 350px;">
+                        <p style="color: #6b7280; text-align: center; padding: 20px;">No actions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:7000';
+        let calendars = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAll();
+            setupDragDrop();
+        });
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`content-${tab}`).classList.add('active');
+        }
+
+        async function submitText() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) return alert('Enter text');
+            try {
+                const res = await fetch(`${API}/journal`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_input: text})
+                });
+                if (res.ok) {
+                    document.getElementById('textInput').value = '';
+                    alert('✅ Added!');
+                    loadAll();
+                }
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        async function handleUpload(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const form = new FormData();
+            form.append('file', file);
+            form.append('input_type', type);
+            try {
+                const res = await fetch(`${API}/upload`, { method: 'POST', body: form });
+                const data = await res.json();
+                alert(data.message || '✅ Processed!');
+                loadAll();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        async function submitCode() {
+            const code = document.getElementById('codeInput').value.trim();
+            const lang = document.getElementById('codeLanguage').value;
+            if (!code) return alert('Enter code');
+            const text = `[${lang.toUpperCase()}]\n${code}`;
+            try {
+                const res = await fetch(`${API}/journal`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_input: text})
+                });
+                if (res.ok) {
+                    document.getElementById('codeInput').value = '';
+                    alert('✅ Added!');
+                    loadAll();
+                }
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        async function handleCalendarUpload(e) {
+            for (const file of e.target.files) {
+                const form = new FormData();
+                form.append('file', file);
+                form.append('input_type', 'image');
+                try {
+                    await fetch(`${API}/upload`, { method: 'POST', body: form });
+                    calendars.push({name: file.name});
+                    renderCalendars();
+                } catch (e) {}
+            }
+        }
+
+        function renderCalendars() {
+            const list = document.getElementById('calendarList');
+            const btn = document.getElementById('consolidateBtn');
+            if (calendars.length === 0) {
+                list.innerHTML = '';
+                btn.style.display = 'none';
+                return;
+            }
+            let html = '';
+            calendars.forEach((c, i) => {
+                html += `<div class="cal-item"><span>📅 ${c.name}</span><span class="cal-remove" onclick="calendars.splice(${i},1); renderCalendars();">Remove</span></div>`;
+            });
+            list.innerHTML = html;
+            btn.style.display = calendars.length >= 2 ? 'block' : 'none';
+        }
+
+        async function consolidate() {
+            await loadAll();
+            alert('✅ Consolidated! Check Calendar Summary.');
+        }
+
+        function setupDragDrop() {
+            ['imageZone', 'calendarZone'].forEach(id => {
+                const zone = document.getElementById(id);
+                zone.addEventListener('click', () => {
+                    if (id === 'imageZone') document.getElementById('imageInput').click();
+                    else document.getElementById('calendarInput').click();
+                });
+                zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = '#667eea'; });
+                zone.addEventListener('dragleave', () => { zone.style.borderColor = '#d1d5db'; });
+                zone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    zone.style.borderColor = '#d1d5db';
+                    if (id === 'imageZone') {
+                        document.getElementById('imageInput').files = e.dataTransfer.files;
+                        handleUpload({target: {files: e.dataTransfer.files}}, 'image');
+                    } else {
+                        document.getElementById('calendarInput').files = e.dataTransfer.files;
+                        handleCalendarUpload({target: {files: e.dataTransfer.files}});
+                    }
+                });
+            });
+        }
+
+        async function loadAll() {
+            loadOverall();
+            loadCalendar();
+            loadJournal();
+            loadRecent();
+            loadActions();
+        }
+
+        async function loadOverall() {
+            try {
+                // Get overall summary AND all calendar events
+                const [summaryRes, calRes] = await Promise.all([
+                    fetch(`${API}/api/summaries/overall/today`),
+                    fetch(`${API}/calendar/events`)
+                ]);
+
+                const summary = await summaryRes.json();
+                const calendar = await calRes.json();
+
+                // Update stats with TOTAL calendar events, not just today's
+                document.getElementById('stat-events').textContent = calendar.count || 0;
+                document.getElementById('stat-entries').textContent = summary.journal_summary.total_entries;
+                document.getElementById('stat-actions').textContent = summary.journal_summary.action_items.length;
+                document.getElementById('stat-conflicts').textContent = calendar.conflicts ? calendar.conflicts.length : 0;
+
+                // Show overall summary
+                let html = `<div style="font-size:12px; font-weight:600; margin-bottom:8px;">📊 Today's Overview</div>`;
+                html += `<div class="summary-box">${summary.combined_summary.replace(/\n/g, '<br>')}</div>`;
+
+                // Show calendar stats
+                if (calendar.count > 0) {
+                    html += `<div style="font-size:11px; font-weight:600; margin:10px 0 4px 0;">📅 Calendar Stats</div>`;
+                    html += `<div style="font-size:11px; color:#6b7280;">
+                        • ${calendar.count} total events in all calendars<br>
+                        • ${summary.calendar_summary.total_events} events today<br>
+                        ${calendar.conflicts && calendar.conflicts.length > 0 ? `• ⚠️ ${calendar.conflicts.length} conflicts detected` : '• No conflicts'}
+                    </div>`;
+                }
+
+                // Show highlights
+                if (summary.highlights.length > 0) {
+                    html += '<div style="font-size:11px; font-weight:600; margin:10px 0 4px 0;">✨ Highlights:</div><ul style="margin-left:16px; font-size:11px;">';
+                    summary.highlights.forEach(h => html += `<li>${h}</li>`);
+                    html += '</ul>';
+                }
+
+                document.getElementById('overallSummary').innerHTML = html;
+            } catch (e) {
+                console.error('Overall summary error:', e);
+                document.getElementById('overallSummary').innerHTML = '<p style="color:#ef4444;">Failed to load</p>';
+            }
+        }
+
+        async function loadCalendar() {
+            try {
+                // Load ALL events from all calendars
+                const res = await fetch(`${API}/calendar/events`);
+                const data = await res.json();
+
+                let html = '';
+
+                // Show conflicts if any
+                if (data.conflicts && data.conflicts.length > 0) {
+                    html += `<div class="alert alert-warning">⚠️ ${data.conflicts.length} conflicts detected</div>`;
+                }
+
+                if (data.events && data.events.length > 0) {
+                    // Group events by date
+                    const eventsByDate = {};
+                    data.events.forEach(e => {
+                        const date = new Date(e.start_time).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+                        if (!eventsByDate[date]) eventsByDate[date] = [];
+                        eventsByDate[date].push(e);
+                    });
+
+                    // Sort dates
+                    const sortedDates = Object.keys(eventsByDate).sort((a, b) => new Date(a) - new Date(b));
+
+                    // Display events grouped by date
+                    html += `<div style="font-size:11px; font-weight:600; margin-bottom:8px;">📅 All Calendar Events (${data.count} total)</div>`;
+
+                    sortedDates.forEach(date => {
+                        html += `<div style="font-weight:600; color:#667eea; font-size:11px; margin:10px 0 6px 0;">${date}</div>`;
+                        eventsByDate[date].forEach(e => {
+                            const time = new Date(e.start_time).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+                            const conflict = e.has_conflict ? ' conflict' : '';
+                            html += `<div class="event-item${conflict}">
+                                <div class="item-time">${time}</div>
+                                <div class="item-title">${e.title}</div>
+                                ${e.location ? `<div class="item-meta">📍 ${e.location}</div>` : ''}
+                            </div>`;
+                        });
+                    });
+                } else {
+                    html = '<p style="color:#6b7280; text-align:center; padding:20px;">No calendar events. Upload calendar images above.</p>';
+                }
+
+                document.getElementById('calendarSummary').innerHTML = html;
+            } catch (e) {
+                console.error('Calendar load error:', e);
+                document.getElementById('calendarSummary').innerHTML = '<p style="color:#ef4444;">Error loading calendar</p>';
+            }
+        }
+
+        async function loadJournal() {
+            try {
+                const res = await fetch(`${API}/api/summaries/journal/today`);
+                const data = await res.json();
+                let html = `<p style="font-size:12px; margin-bottom:8px;">${data.summary_text}</p>`;
+                if (data.tags.length > 0) {
+                    data.tags.forEach(tag => html += `<span class="tag">${tag}</span>`);
+                }
+                document.getElementById('journalSummary').innerHTML = html || '<p style="color:#6b7280;">No entries</p>';
+            } catch (e) {}
+        }
+
+        async function loadRecent() {
+            try {
+                const res = await fetch(`${API}/entries`);
+                const data = await res.json();
+                if (data.entries && data.entries.length > 0) {
+                    let html = '';
+                    data.entries.slice(0, 5).forEach(e => {
+                        const time = new Date(e.timestamp).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+                        const content = e.raw_content.substring(0, 80) + (e.raw_content.length > 80 ? '...' : '');
+                        html += `<div class="entry-item"><div class="item-meta">${time} • ${e.input_type}</div><div style="margin-top:4px;">${content}</div></div>`;
+                    });
+                    document.getElementById('recentEntries').innerHTML = html;
+                }
+            } catch (e) {}
+        }
+
+        async function loadActions() {
+            try {
+                const res = await fetch(`${API}/actions`);
+                const data = await res.json();
+                if (data.actions && data.actions.length > 0) {
+                    let html = '';
+                    data.actions.forEach(a => {
+                        const priority = a.priority_level || 'P2';
+                        html += `<div class="action-item"><input type="checkbox" style="width:14px; height:14px;"><span style="flex:1">${a.description}</span><span class="priority ${priority}">${priority}</span></div>`;
+                    });
+                    document.getElementById('actionItems').innerHTML = html;
+                }
+            } catch (e) {}
+        }
+
+        setInterval(loadAll, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

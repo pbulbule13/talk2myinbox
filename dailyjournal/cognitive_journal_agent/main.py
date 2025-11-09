@@ -124,16 +124,26 @@ def api_mode():
     # Serve static files
     app.mount("/web", StaticFiles(directory=str(Path(__file__).parent / "web")), name="web")
 
-    # Serve web_ui.html at root
+    # Serve web UIs
     @app.get("/web_ui.html")
     async def serve_web_ui():
-        """Serve the main web UI."""
+        """Serve the original web UI."""
         return FileResponse(str(Path(__file__).parent / "web_ui.html"))
+
+    @app.get("/compact")
+    async def serve_compact_ui():
+        """Serve the compact dashboard UI."""
+        return FileResponse(str(Path(__file__).parent / "web_ui_compact.html"))
 
     @app.get("/")
     async def serve_root():
-        """Redirect root to web UI."""
-        return FileResponse(str(Path(__file__).parent / "web_ui.html"))
+        """Serve compact UI as default (all features in condensed layout)."""
+        return FileResponse(str(Path(__file__).parent / "web_ui_compact_v2.html"))
+
+    @app.get("/full")
+    async def serve_full_ui():
+        """Serve full UI with larger layout."""
+        return FileResponse(str(Path(__file__).parent / "web_ui_complete.html"))
 
     # Request/Response models
     class JournalRequest(BaseModel):
@@ -221,7 +231,7 @@ def api_mode():
             return {
                 "success": True,
                 "count": len(entries),
-                "entries": [entry.dict() for entry in entries]
+                "entries": [entry.model_dump() for entry in entries]
             }
 
         except Exception as e:
@@ -238,7 +248,7 @@ def api_mode():
             return {
                 "success": True,
                 "count": len(actions),
-                "actions": [action.dict() for action in actions]
+                "actions": [action.model_dump() for action in actions]
             }
 
         except Exception as e:
@@ -254,7 +264,7 @@ def api_mode():
                 report = result["final_report"]
                 return {
                     "success": True,
-                    "report": report.dict() if hasattr(report, "dict") else str(report),
+                    "report": report.model_dump() if hasattr(report, "model_dump") else str(report),
                     "audio_path": result.get("audio_output_path")
                 }
             else:
@@ -297,9 +307,110 @@ def api_mode():
                     message = "Voice memo processed"
 
                 elif input_type == 'image':
-                    # Process image with OCR
+                    # Process image with Gemini multimodal
                     entry = ingestor.process_photo_ocr(tmp_path)
-                    message = "Image processed with OCR"
+
+                    # ALWAYS attempt to extract calendar events from images using Gemini
+                    calendar_processed = False
+                    events_extracted = 0
+
+                    try:
+                        from services.gemini_multimodal import GeminiMultimodalProcessor
+                        from data_models.pydantic_schemas import CalendarSource, UnifiedEvent
+                        from nodes.calendar_storage import CalendarStorageManager
+                        import uuid
+                        from datetime import datetime, timedelta
+
+                        print(f"[GEMINI UPLOAD] Attempting calendar extraction from image...")
+
+                        gemini = GeminiMultimodalProcessor()
+
+                        # Try to extract calendar events
+                        events_data, error = gemini.extract_calendar_events(tmp_path)
+
+                        if error:
+                            print(f"[GEMINI UPLOAD] Calendar extraction error: {error}")
+
+                        if events_data and len(events_data) > 0:
+                            # Create calendar source
+                            temp_source = CalendarSource(
+                                source_id=f"upload_{uuid.uuid4().hex[:8]}",
+                                source_type="ocr",
+                                display_name="Uploaded Calendar Image",
+                                is_active=True,
+                                color="#FF6B6B"
+                            )
+
+                            # Convert to UnifiedEvent objects
+                            unified_events = []
+                            for event_data in events_data:
+                                try:
+                                    # Parse date and time
+                                    event_date = datetime.fromisoformat(event_data['date'])
+                                    all_day = event_data.get('all_day', False)
+
+                                    if not all_day and event_data.get('start_time'):
+                                        hour, minute = map(int, event_data['start_time'].split(':'))
+                                        start_time = event_date.replace(hour=hour, minute=minute)
+                                    else:
+                                        start_time = event_date
+                                        all_day = True
+
+                                    if event_data.get('end_time') and not all_day:
+                                        hour, minute = map(int, event_data['end_time'].split(':'))
+                                        end_time = event_date.replace(hour=hour, minute=minute)
+                                    else:
+                                        end_time = start_time + timedelta(hours=1) if not all_day else event_date + timedelta(days=1)
+
+                                    event = UnifiedEvent(
+                                        event_id=f"{temp_source.source_id}_{uuid.uuid4().hex[:8]}",
+                                        source_id=temp_source.source_id,
+                                        title=event_data.get('title', 'Untitled Event'),
+                                        description=event_data.get('description'),
+                                        location=event_data.get('location'),
+                                        start_time=start_time,
+                                        end_time=end_time,
+                                        all_day=all_day,
+                                        timezone='UTC',
+                                        original_event_id=f"gemini_{uuid.uuid4().hex[:8]}",
+                                        raw_data=event_data
+                                    )
+                                    unified_events.append(event)
+                                except Exception as e:
+                                    print(f"Error creating event: {e}")
+                                    continue
+
+                            # Save events to storage
+                            if unified_events:
+                                storage = CalendarStorageManager()
+                                storage.save_events(unified_events)
+                                storage.save_calendar_source(temp_source)
+
+                                calendar_processed = True
+                                events_extracted = len(unified_events)
+                                message = f"✅ Calendar processed with Gemini AI! Extracted {events_extracted} event(s). Check 'Today's Schedule' widget."
+                                print(f"[GEMINI UPLOAD] Successfully extracted {events_extracted} events")
+
+                                # Add info to entry
+                                if hasattr(entry, 'raw_content'):
+                                    entry.raw_content += f"\n\n[✅ Calendar Events Extracted: {events_extracted}]"
+                                    event_list = "\n".join([f"- {e.title} ({e.start_time.strftime('%I:%M %p')})" for e in unified_events[:5]])
+                                    entry.raw_content += f"\n{event_list}"
+                                    if len(unified_events) > 5:
+                                        entry.raw_content += f"\n... and {len(unified_events) - 5} more events"
+                        else:
+                            message = "📝 Image processed with Gemini. No calendar events detected."
+                            print(f"[GEMINI UPLOAD] No calendar events found in image.")
+
+                    except Exception as e:
+                        # If calendar processing fails, just continue with regular text extraction
+                        print(f"[GEMINI UPLOAD] Exception during calendar processing: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        message = "✅ Image processed with Gemini AI (calendar extraction unavailable)."
+
+                    if not calendar_processed and 'message' not in locals():
+                        message = "✅ Image processed with Gemini AI"
 
                 elif input_type == 'pdf':
                     # Process PDF
@@ -312,7 +423,7 @@ def api_mode():
                 # Store the entry
                 from nodes.storage import StorageManager
                 storage = StorageManager()
-                storage.store_entry(entry)
+                storage.save_entry(entry)
 
                 return JournalResponse(
                     success=True,
@@ -607,6 +718,14 @@ def api_mode():
     except ImportError as e:
         print(f"Warning: Could not load calendar routes: {e}")
         print("Calendar features will not be available.")
+
+    # Include summary routes (calendar + journal summaries)
+    try:
+        from api.summary_routes import router as summary_router
+        app.include_router(summary_router)
+    except ImportError as e:
+        print(f"Warning: Could not load summary routes: {e}")
+        print("Summary features will not be available.")
 
     # Start server
     print("\n" + "="*60)
